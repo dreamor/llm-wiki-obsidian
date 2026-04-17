@@ -1,0 +1,35 @@
+{
+  "name": "llm-wiki-obsidian",
+  "id": "llm-wiki-obsidian",
+  "owner": {
+    "name": "dreamor",
+    "url": "https://github.com/dreamor"
+  },
+  "metadata": {
+    "description": "Personal knowledge base management based on Karpathy's LLM Wiki pattern",
+    "version": "1.0.0",
+    "category": "productivity"
+  },
+  "plugins": [
+    {
+      "name": "llm-wiki-obsidian",
+      "source": "./",
+      "description": "Build and maintain a persistent wiki with Obsidian CLI. Features: Ingest new sources, Query knowledge, Lint (health-check) wiki, Cross-reference everything, Flag contradictions.",
+      "version": "1.0.0",
+      "author": {
+        "name": "dreamor",
+        "url": "https://github.com/dreamor"
+      },
+      "keywords": [
+        "knowledge-management",
+        "obsidian",
+        "wiki",
+        "note-taking",
+        "second-brain",
+        "zettelkasten"
+      ],
+      "category": "productivity",
+      "homepage": "https://github.com/dreamor/llm-wiki-obsidian"
+    }
+  ]
+}

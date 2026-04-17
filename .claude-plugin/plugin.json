@@ -1,0 +1,23 @@
+{
+  "name": "llm-wiki-obsidian",
+  "version": "1.0.0",
+  "description": "Personal knowledge base management skill based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki through Obsidian CLI.",
+  "author": {
+    "name": "dreamor",
+    "url": "https://github.com/dreamor"
+  },
+  "homepage": "https://github.com/dreamor/llm-wiki-obsidian",
+  "repository": "https://github.com/dreamor/llm-wiki-obsidian",
+  "license": "MIT",
+  "keywords": [
+    "knowledge-management",
+    "obsidian",
+    "wiki",
+    "note-taking",
+    "second-brain",
+    "zettelkasten",
+    "llm",
+    "rag-alternative"
+  ],
+  "skills": ["./skills/llm-wiki-obsidian"]
+}

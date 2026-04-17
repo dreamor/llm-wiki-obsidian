@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Config (user-specific)
+config.json
+
+# Knowledge base template (user will copy)
+kb-template/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
