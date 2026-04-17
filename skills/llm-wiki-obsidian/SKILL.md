@@ -1,21 +1,39 @@
 ---
 name: llm-wiki-obsidian
 description: >
-  基于 Karpathy LLM Knowledge Base 模式的个人知识库管理技能。通过 Obsidian CLI
-  与本地 Obsidian Vault 交互。核心思想：LLM 不是在查询时从原始文档重新发现知识，
-  而是增量构建和维护一个持久的 Wiki——结构化的、互联的 Markdown 文件集合。
-  当添加新资料时，LLM 会读取、提取关键信息并整合到现有 Wiki 中。
-  **触发条件**：用户提到知识库、Wiki、整理知识、建立知识体系、Obsidian、摄入资料、
-  查询知识、维护个人知识库、或讨论 Karpathy/Wiki 模式。
+  Personal knowledge base management skill based on Karpathy's LLM Wiki pattern.
+  Build and maintain a persistent wiki through Obsidian CLI or direct file operations.
+  **Triggers**: knowledge base, wiki, organize knowledge, Obsidian, ingest sources,
+  query knowledge, personal knowledge management, Karpathy wiki pattern.
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, mcp__fetch__fetch
 license: MIT
+agents:
+  claude-code: full
+  cursor: full
+  windsurf: full
+  cline: full
+  aider: full
+  mcp-compatible: full
 ---
 
-# 个人知识库管理技能 — llm-wiki-obsidian
+# Personal Knowledge Base Skill — llm-wiki-obsidian
 
-基于 Karpathy LLM Wiki 模式，通过 Obsidian CLI 操作本地 Obsidian Vault。
+Based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki through Obsidian CLI or direct file operations.
 
-## 核心思想
+## Agent Compatibility
+
+| Agent | Support | Interface |
+|-------|---------|-----------|
+| Claude Code | ✅ Full | Native tools + Obsidian CLI |
+| Cursor | ✅ Full | Bash + File operations |
+| Windsurf | ✅ Full | Bash + File operations |
+| Cline | ✅ Full | Bash + File operations |
+| Aider | ✅ Full | Bash + File operations |
+| MCP-compatible | ✅ Full | MCP tools |
+
+> See [AGENT.md](../../AGENT.md) for detailed agent-specific instructions.
+
+## Core Concept
 
 **不是 RAG，是持久 Wiki！**
 

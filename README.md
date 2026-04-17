@@ -17,9 +17,22 @@ Personal knowledge base management skill based on [Karpathy's LLM Wiki pattern](
 **Human's job**: Curate sources, guide analysis, ask good questions.
 **LLM's job**: Bookkeeping (update cross-references, keep summaries current, flag contradictions).
 
+## Agent Compatibility
+
+| Agent | Plugin Mode | Skill Mode | Interface |
+|-------|-------------|------------|-----------|
+| Claude Code | ✅ Full | ✅ Full | Native tools + Obsidian CLI |
+| Cursor | ❌ | ✅ Full | Bash + File operations |
+| Windsurf | ❌ | ✅ Full | Bash + File operations |
+| Cline | ❌ | ✅ Full | Bash + File operations |
+| Aider | ❌ | ✅ Full | Bash + File operations |
+| MCP-compatible | ❌ | ✅ Full | MCP tools |
+
+> **Note**: Plugin mode is Claude Code exclusive. Skill mode works with any agent that supports file operations and bash commands.
+
 ## Installation
 
-### Option A: Claude Code Plugin (Recommended)
+### Option A: Claude Code Plugin (Claude Only)
 
 ```bash
 # Add marketplace
@@ -29,28 +42,23 @@ Personal knowledge base management skill based on [Karpathy's LLM Wiki pattern](
 /plugin install llm-wiki-obsidian@llm-wiki-obsidian
 ```
 
-### Option B: Install as Global Skill
+### Option B: Install as Global Skill (All Agents)
 
-Install to `~/.claude/skills/` for global availability across all projects:
+Install to `~/.claude/skills/` or `~/.agents/skills/` for global availability:
 
 ```bash
-# Clone to skills directory
+# For Claude Code
 git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.claude/skills/llm-wiki-obsidian
 
-# Run setup script
-cd ~/.claude/skills/llm-wiki-obsidian
-bash skills/llm-wiki-obsidian/scripts/setup.sh
-```
-
-Or install to `~/.agents/skills/` (alternative location):
-
-```bash
+# For Cursor / Windsurf / Cline / Aider
 git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.agents/skills/llm-wiki-obsidian
-cd ~/.agents/skills/llm-wiki-obsidian
+
+# Run setup script
+cd ~/.claude/skills/llm-wiki-obsidian  # or ~/.agents/skills/llm-wiki-obsidian
 bash skills/llm-wiki-obsidian/scripts/setup.sh
 ```
 
-### Option C: CLAUDE.md Only
+### Option C: Project-Level CLAUDE.md
 
 For project-specific usage without installing as a skill:
 
@@ -65,11 +73,11 @@ curl https://raw.githubusercontent.com/dreamor/llm-wiki-obsidian/main/CLAUDE.md 
 
 ### Installation Comparison
 
-| Method | Scope | Auto-trigger | Use Case |
-|--------|-------|--------------|----------|
-| Plugin | Global | ✅ Yes | Recommended for most users |
-| Global Skill | Global | ✅ Yes | Manual installation, full control |
-| CLAUDE.md | Project | ❌ No | Project-specific, lightweight |
+| Method | Scope | Agents | Auto-trigger | Use Case |
+|--------|-------|--------|--------------|----------|
+| Plugin | Global | Claude Code only | ✅ Yes | Claude users (recommended) |
+| Global Skill | Global | All agents | ✅ Yes | Multi-agent users |
+| CLAUDE.md | Project | All agents | ❌ No | Project-specific, lightweight |
 
 ## Prerequisites
 
