@@ -19,16 +19,15 @@ Personal knowledge base management skill based on [Karpathy's LLM Wiki pattern](
 
 ## Agent Compatibility
 
-| Agent | Plugin Mode | Skill Mode | Interface |
-|-------|-------------|------------|-----------|
-| Claude Code | ✅ Full | ✅ Full | Native tools + Obsidian CLI |
-| Cursor | ❌ | ✅ Full | Bash + File operations |
-| Windsurf | ❌ | ✅ Full | Bash + File operations |
-| Cline | ❌ | ✅ Full | Bash + File operations |
-| Aider | ❌ | ✅ Full | Bash + File operations |
-| MCP-compatible | ❌ | ✅ Full | MCP tools |
-
-> **Note**: Plugin mode is Claude Code exclusive. Skill mode works with any agent that supports file operations and bash commands.
+| Agent | Bootstrap File | Interface |
+|-------|---------------|-----------|
+| Claude Code | `CLAUDE.md` | Native tools + Obsidian CLI |
+| Cursor | `.cursor/rules/llm-wiki-obsidian.mdc` | Bash + File operations |
+| Windsurf | `.windsurf/rules/llm-wiki-obsidian.md` | Bash + File operations |
+| Codex | `AGENTS.md` | Bash + File operations |
+| Hermes | `.hermes.md` | Bash + File operations |
+| OpenClaw | `AGENTS.md` + symlink | Bash + File operations |
+| GitHub Copilot | `.github/copilot-instructions.md` | Bash + File operations |
 
 ## Installation
 
@@ -42,23 +41,28 @@ Personal knowledge base management skill based on [Karpathy's LLM Wiki pattern](
 /plugin install llm-wiki-obsidian@llm-wiki-obsidian
 ```
 
-### Option B: Install as Global Skill (All Agents)
-
-Install to `~/.claude/skills/` or `~/.agents/skills/` for global availability:
+### Option B: npx (Recommended for All Agents)
 
 ```bash
-# For Claude Code
-git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.claude/skills/llm-wiki-obsidian
+# Install globally via npx skills
+npx skills add dreamor/llm-wiki-obsidian
 
-# For Cursor / Windsurf / Cline / Aider
-git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.agents/skills/llm-wiki-obsidian
-
-# Run setup script
-cd ~/.claude/skills/llm-wiki-obsidian  # or ~/.agents/skills/llm-wiki-obsidian
-bash skills/llm-wiki-obsidian/scripts/setup.sh
+# Or with specific agent
+npx skills add dreamor/llm-wiki-obsidian --agent cursor
 ```
 
-### Option C: Project-Level CLAUDE.md
+### Option C: Git Clone + Setup Script
+
+```bash
+# Clone the repository
+git clone https://github.com/dreamor/llm-wiki-obsidian.git
+cd llm-wiki-obsidian
+
+# Run setup script (creates symlinks for all agents)
+bash setup.sh
+```
+
+### Option D: Project-Level CLAUDE.md
 
 For project-specific usage without installing as a skill:
 
@@ -76,37 +80,9 @@ curl https://raw.githubusercontent.com/dreamor/llm-wiki-obsidian/main/CLAUDE.md 
 | Method | Scope | Agents | Auto-trigger | Use Case |
 |--------|-------|--------|--------------|----------|
 | Plugin | Global | Claude Code only | ✅ Yes | Claude users (recommended) |
-| Global Skill | Global | All agents | ✅ Yes | Multi-agent users |
-| CLAUDE.md | Project | All agents | ❌ No | Project-specific, lightweight |
-
-## Prerequisites
-
-- Obsidian 1.9+ with CLI enabled (`obsidian.json`: `{ "cli": true }`)
-- Obsidian must be running when using the skill
-
-## Architecture (4 Layers)
-
-```
-knowledge-base/
-├── clippings/              # Pending clips (temporary, moved after processing)
-│   └── *.md               # Web Clipper saved clips
-├── raw/                    # Raw materials (immutable, read-only)
-│   ├── articles/          # Articles
-│   ├── papers/            # Papers
-│   └── assets/           # Images, attachments
-├── wiki/                   # LLM-generated Wiki (AI maintains)
-│   ├── entities/          # Entity pages (people, orgs, projects)
-│   ├── concepts/         # Concept pages (technical concepts)
-│   ├── sources/          # Source summary pages
-│   └── synthesis/        # Synthesis analysis pages
-├── index.md               # Content catalog
-└── log.md                # Operation log
-```
-
-**Directory Description**:
-- `clippings/` — Temporary storage for pending web clips
-- `raw/` — Archived raw materials, classified by topic, read-only
-- `wiki/` — Structured knowledge maintained by LLM
+| npx | Global | All agents | ✅ Yes | Multi-agent users |
+| Git Clone | Global | All agents | ✅ Yes | Manual control |
+| CLAUDE.md | Project | All agents | ❌ No | Project-specific |
 
 ## Core Features
 
@@ -179,6 +155,53 @@ Check wiki health:
 - Missing concepts
 - Cross-references
 
+### 5. Auto Cross-Linker
+
+Automatically scan wiki pages and insert missing [[wikilinks]]:
+
+```
+# Trigger commands:
+/wiki-crosslinker
+cross-link my wiki
+add missing links
+```
+
+The cross-linker:
+1. Scans all wiki/ pages
+2. Extracts titles, concepts, and tags
+3. Identifies related but unlinked pages
+4. Inserts [[wikilinks]] at appropriate sections
+5. Avoids duplicate links
+
+## Prerequisites
+
+- Obsidian 1.9+ with CLI enabled (`obsidian.json`: `{ "cli": true }`)
+- Obsidian must be running when using the CLI
+
+## Architecture (4 Layers)
+
+```
+knowledge-base/
+├── clippings/              # Pending clips (temporary, moved after processing)
+│   └── *.md               # Web Clipper saved clips
+├── raw/                    # Raw materials (immutable, read-only)
+│   ├── articles/          # Articles
+│   ├── papers/            # Papers
+│   └── assets/           # Images, attachments
+├── wiki/                   # LLM-generated Wiki (AI maintains)
+│   ├── entities/          # Entity pages (people, orgs, projects)
+│   ├── concepts/         # Concept pages (technical concepts)
+│   ├── sources/          # Source summary pages
+│   └── synthesis/        # Synthesis analysis pages
+├── index.md               # Content catalog
+└── log.md                # Operation log
+```
+
+**Directory Description**:
+- `clippings/` — Temporary storage for pending web clips
+- `raw/` — Archived raw materials, classified by topic, read-only
+- `wiki/` — Structured knowledge maintained by LLM
+
 ## Key Principles
 
 1. **Clippings → Raw** — Move clippings/ to raw/ first on each organize
@@ -203,8 +226,39 @@ Ingest: Process raw/ files, create wiki pages
     ↓
 Synthesize: Identify synthesis topics, generate pages
     ↓
+Cross-Linker: Add missing [[wikilinks]] (optional)
+    ↓
+Lint: Check health
+    ↓
 Update index.md, log operations
 ```
+
+## Obsidian Syntax Rules
+
+This skill is designed for Obsidian. Follow these rules:
+
+### Mermaid Flowcharts
+```mermaid
+flowchart LR
+    A[Node] --> B[Target]
+```
+- Use ` ```mermaid ` (three backticks)
+- Avoid Chinese in node IDs: use `A[中文]` format
+- Avoid consecutive arrows: split `A --> B --> C`
+
+### Markdown Tables
+- **REQUIRED**: Blank line between heading and table
+```markdown
+## Heading
+
+| Col1 | Col2 |
+|------|------|
+| Val1 | Val2 |
+```
+
+### Wikilinks
+- **Correct**: `[[Page Name]]`
+- **Wrong**: `[[Page Name|Path]]`
 
 ## Why It Works
 
