@@ -29,15 +29,30 @@ Personal knowledge base management skill based on [Karpathy's LLM Wiki pattern](
 /plugin install llm-wiki-obsidian@llm-wiki-obsidian
 ```
 
-### Option B: Git Clone
+### Option B: Install as Global Skill
+
+Install to `~/.claude/skills/` for global availability across all projects:
 
 ```bash
+# Clone to skills directory
 git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.claude/skills/llm-wiki-obsidian
+
+# Run setup script
 cd ~/.claude/skills/llm-wiki-obsidian
 bash skills/llm-wiki-obsidian/scripts/setup.sh
 ```
 
+Or install to `~/.agents/skills/` (alternative location):
+
+```bash
+git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.agents/skills/llm-wiki-obsidian
+cd ~/.agents/skills/llm-wiki-obsidian
+bash skills/llm-wiki-obsidian/scripts/setup.sh
+```
+
 ### Option C: CLAUDE.md Only
+
+For project-specific usage without installing as a skill:
 
 ```bash
 # New project
@@ -47,6 +62,14 @@ curl -o CLAUDE.md https://raw.githubusercontent.com/dreamor/llm-wiki-obsidian/ma
 echo "" >> CLAUDE.md
 curl https://raw.githubusercontent.com/dreamor/llm-wiki-obsidian/main/CLAUDE.md >> CLAUDE.md
 ```
+
+### Installation Comparison
+
+| Method | Scope | Auto-trigger | Use Case |
+|--------|-------|--------------|----------|
+| Plugin | Global | ✅ Yes | Recommended for most users |
+| Global Skill | Global | ✅ Yes | Manual installation, full control |
+| CLAUDE.md | Project | ❌ No | Project-specific, lightweight |
 
 ## Prerequisites
 
