@@ -1,0 +1,106 @@
+# llm-wiki-obsidian
+
+Personal knowledge base management based on Karpathy's LLM Wiki pattern.
+
+## Quick Commands
+
+- "organize my knowledge base" - Run full organize workflow
+- "ingest this article" - Add new source to wiki
+- "query my knowledge base about X" - Search and answer
+- "lint my wiki" - Health check
+
+## Architecture
+
+```
+knowledge-base/
+├── raw/                    # Raw materials (immutable)
+├── wiki/                   # LLM-generated Wiki
+│   ├── entities/          # Entity pages
+│   ├── concepts/         # Concept pages
+│   ├── sources/          # Source summaries
+│   └── synthesis/        # Synthesis analysis
+├── index.md               # Content catalog
+└── log.md                # Operation log
+```
+
+## Core Principles
+
+1. **Raw/ immutable** — Never modify raw sources
+2. **LLM owns wiki/** — Auto maintain
+3. **Cross-reference everything** — `[[wikilinks]]`
+4. **Flag contradictions** — `⚠️ Contradicts [[X]]`
+5. **Update index.md** — After each change
+6. **Log operations** — To daily note
+
+## Obsidian Syntax
+
+### Mermaid Flowcharts
+```mermaid
+flowchart LR
+    A[Node] --> B[Target]
+```
+- Use ` ```mermaid ` (three backticks)
+- Avoid Chinese in node IDs: use `A[中文]` format
+- Avoid consecutive arrows
+
+### Markdown Tables
+- **REQUIRED**: Blank line between heading and table
+```markdown
+## Heading
+
+| Col1 | Col2 |
+|------|------|
+```
+
+### Wikilinks
+- Correct: `[[Page Name]]`
+- Wrong: `[[Page Name|Path]]`
+
+## Page Templates
+
+### Entity
+```markdown
+---
+type: entity
+category: person|project|organization
+tags: [tag1]
+date: 2026-04-17
+---
+# Entity Name
+## Basic Info
+## Relations
+- [[Related Entity]]
+## Sources
+```
+
+### Concept
+```markdown
+---
+type: concept
+tags: [tag1]
+date: 2026-04-17
+sources: [raw/original.md]
+---
+# Concept Name
+> One-sentence definition
+## Key Points
+## Related Concepts
+```
+
+### Source
+```markdown
+---
+type: source
+date: 2026-04-17
+url: https://...
+tags: [tag1]
+---
+# Title
+## Summary
+## Key Info
+## Relations
+```
+
+---
+
+See CLAUDE.md for full documentation.

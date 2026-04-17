@@ -4,7 +4,8 @@ description: >
   Personal knowledge base management skill based on Karpathy's LLM Wiki pattern.
   Build and maintain a persistent wiki through Obsidian CLI or direct file operations.
   **Triggers**: knowledge base, wiki, organize knowledge, Obsidian, ingest sources,
-  query knowledge, personal knowledge management, Karpathy wiki pattern.
+  query knowledge, personal knowledge management, Karpathy wiki pattern,
+  cross-link, auto link, link wiki, add links.
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, mcp__fetch__fetch
 license: MIT
 agents:

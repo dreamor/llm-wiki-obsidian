@@ -1,0 +1,60 @@
+{
+  "name": "llm-wiki-obsidian",
+  "version": "1.0.0",
+  "description": "Personal knowledge base management skill based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki through Obsidian CLI.",
+  "main": "skills/llm-wiki-obsidian/SKILL.md",
+  "keywords": [
+    "obsidian",
+    "knowledge-base",
+    "wiki",
+    "llm",
+    "karpathy",
+    "personal-knowledge"
+  ],
+  "homepage": "https://github.com/dreamor/llm-wiki-obsidian",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dreamor/llm-wiki-obsidian.git"
+  },
+  "author": "Scott Wang",
+  "license": "MIT",
+  "skills": {
+    "name": "llm-wiki-obsidian",
+    "description": "Personal knowledge base management with Obsidian",
+    "commands": [
+      "organize knowledge base",
+      "ingest",
+      "query",
+      "lint",
+      "sync clippings"
+    ],
+    "agents": [
+      "claude-code",
+      "cursor",
+      "windsurf",
+      "cline",
+      "aider",
+      "codex",
+      "hermes",
+      "openclaw",
+      "copilot"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "skills/",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "README.md",
+    "setup.sh",
+    ".cursor/rules/",
+    ".windsurf/rules/",
+    ".hermes.md",
+    ".github/"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  }
+}
