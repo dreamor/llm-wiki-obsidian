@@ -45,10 +45,12 @@ license: MIT
 
 ---
 
-## 架构（三层）
+## 架构（四层）
 
 ```
 知识库/
+├── clippings/              # 待处理剪藏（临时存放，处理后移走）
+│   └── *.md               # Web Clipper 保存的网页剪藏
 ├── raw/                    # 原始资料（不可变，只读）
 │   ├── minimind/          # 按主题/项目分类
 │   ├── articles/          # 文章
@@ -64,24 +66,78 @@ license: MIT
 └── AGENTS.md             # 规则文件
 ```
 
+**目录说明**：
+- `clippings/` — 临时存放区，存放待处理的网页剪藏
+- `raw/` — 已归档的原始资料，按主题分类，只读
+- `wiki/` — LLM 维护的结构化知识，包含实体、概念、来源摘要和综合分析
+
 ---
 
 ## 核心操作
 
+### 0. Sync（同步 Clippings）
+
+**每次整理时首先执行**：将 Clippings 内容移动到 raw/
+
+```
+1. 检查 clippings/ 目录是否有待处理文件
+2. 对每个文件：
+   a. 读取内容，判断主题分类
+   b. 生成合适的文件名（日期前缀 + 标题）
+   c. 移动到 raw/ 对应子目录（articles/ 或按主题）
+   d. 记录移动操作
+3. 清空 clippings/ 目录
+4. 继续执行 Ingest 流程
+```
+
+**移动命令**：
+```bash
+# 使用文件系统命令移动
+mv "clippings/剪藏标题.md" "raw/articles/2026-04-17-标题.md"
+```
+
 ### 1. Ingest（摄入新资料）
 
-当用户提供新资料时：
+当用户要求整理知识库或同步 Clippings 后：
 
 ```
-1. 保存原始资料 → raw/ 对应目录
-2. 阅读资料，提取关键信息
-3. 使用 obsidian create 创建来源摘要页 → wiki/sources/
-4. 更新相关实体/概念页（obsidian append）
-5. 更新 index.md
-6. obsidian daily:append 记录到日志
+1. 扫描 raw/ 目录，识别新增/未处理的文件
+2. 对每个新文件：
+   a. 阅读资料，提取关键信息
+   b. 使用 obsidian create 创建来源摘要页 → wiki/sources/
+   c. 更新相关实体/概念页（obsidian append）
+   d. 标记文件已处理（在 frontmatter 添加 processed: true）
+3. 更新 index.md
+4. obsidian daily:append 记录到日志
+5. 执行 Synthesize 流程
 ```
 
-### 2. Query（查询知识）
+### 2. Synthesize（生成综合分析）
+
+**Ingest 完成后自动执行**：根据知识库内容生成 synthesis
+
+```
+1. 读取 index.md，了解当前知识库全貌
+2. 识别可以综合的主题：
+   - 多个来源讨论同一概念
+   - 相关实体之间的关联
+   - 跨领域的话题连接
+3. 对每个值得综合的主题：
+   a. 读取相关页面（sources、entities、concepts）
+   b. 综合分析，提取共同点、差异、洞察
+   c. 创建 wiki/synthesis/综合分析页
+   d. 更新相关页面的交叉引用
+4. 更新 index.md 的 synthesis 部分
+5. 记录到日志
+```
+
+**Synthesis 页面内容**：
+- 核心发现（从多个来源提炼）
+- 观点对比（不同来源的异同）
+- 洞察与结论（LLM 的综合分析）
+- 来源引用（链接到相关页面）
+
+### 3. Query（查询知识）
 
 **通过 Obsidian CLI 查询**：
 ```bash
@@ -106,7 +162,7 @@ obsidian backlinks file="页面名"
 
 **重要**：好的答案应该**沉淀回 Wiki**！
 
-### 3. Lint（知识库体检）
+### 4. Lint（知识库体检）
 
 定期检查：
 - **矛盾**：不同页面的信息是否冲突
@@ -273,12 +329,14 @@ date: 2026-04-17
 
 ## 关键原则
 
-1. **Raw sources immutable** — `raw/` 是只读的，绝不修改
-2. **LLM owns wiki** — 自动创建、更新、维护 Wiki
-3. **Cross-reference everything** — 双向 `[[wikilinks]]`
-4. **Flag contradictions** — 发现矛盾时标注 `⚠️ 与 [[X]] 矛盾`
-5. **Keep index current** — 每次变更后更新 index.md
-6. **Append to log** — 每次操作记录到 log.md
+1. **Clippings → Raw** — 每次整理先移动 clippings/ 到 raw/
+2. **Raw sources immutable** — `raw/` 是只读的，绝不修改
+3. **LLM owns wiki** — 自动创建、更新、维护 Wiki
+4. **Cross-reference everything** — 双向 `[[wikilinks]]`
+5. **Flag contradictions** — 发现矛盾时标注 `⚠️ 与 [[X]] 矛盾`
+6. **Synthesize after ingest** — 每次摄入后自动生成综合分析
+7. **Keep index current** — 每次变更后更新 index.md
+8. **Append to log** — 每次操作记录到 log.md
 
 ---
 
@@ -325,10 +383,6 @@ date: 2026-04-17
 ### Obsidian Web Clipper
 浏览器扩展，将网页文章转 Markdown，快速获取资料到 raw/。
 
-### 搜索增强
-- 小 Wiki（<100 页）：`index.md` + `obsidian search` 足够
-- 增长中的 Wiki：使用 [qmd](https://github.com/tobi/qmd) CLI（BM25 + 向量搜索 + LLM 重排）
-
 ### 插件推荐
 - **Dataview**：查询页面 frontmatter，生成动态表格
 - **graph view**：查看 Wiki 结构，发现孤立页面
@@ -348,6 +402,14 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 
 ## 快速开始
 
+当用户要求整理知识库时（完整流程）：
+```
+1. Sync：检查 clippings/，移动文件到 raw/
+2. Ingest：处理 raw/ 新文件，创建 wiki 页面
+3. Synthesize：识别综合主题，生成 synthesis 页面
+4. Lint：检查知识库健康（可选）
+```
+
 当用户提供新资料要摄入时：
 ```
 1. 请用户提供资料内容或 URL
@@ -357,6 +419,7 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 5. obsidian append 更新相关实体/概念页
 6. 更新 index.md
 7. obsidian daily:append 记录
+8. 执行 Synthesize 生成综合分析
 ```
 
 当用户向知识库提问时：
@@ -364,8 +427,37 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 1. obsidian search 搜索相关页面
 2. obsidian read 读取匹配页面
 3. 综合回答并标注来源
-4. 询问用户是否要将回答存入 Wiki
+4. 有价值的新洞察 → 创建 synthesis 页面
 ```
+
+---
+
+## 扩展与规模化
+
+### 搜索增强
+
+- **小型 Wiki（<100 页）**：`index.md` + `obsidian search` 足够
+- **增长中的 Wiki**：使用 [qmd](https://github.com/tobi/qmd) CLI
+  - BM25 + 向量搜索 + LLM 重排
+  - 更快的语义检索
+  - LLM 可以帮助编写搜索脚本
+
+### 性能优化
+
+随着 Wiki 增长，可以考虑：
+- 分离高频访问的页面到独立索引
+- 使用 Dataview 插件生成动态索引
+- 定期 Lint 保持知识库健康
+
+---
+
+## 何时阅读参考资料
+
+以下情况应查阅 references 目录：
+
+- **完整理解 Karpathy 模式**：阅读 `references/karpathy-kb-pattern.md`
+- **Obsidian CLI 完整命令参考**：阅读 `references/obsidian-cli.md`
+- **遇到 CLI 问题**：检查 Obsidian 是否运行、CLI 是否启用
 
 ---
 
