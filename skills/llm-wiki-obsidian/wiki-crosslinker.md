@@ -1,179 +1,301 @@
----
-name: wiki-crosslinker
-description: >
-  Auto cross-linker for Obsidian wiki. Scans all wiki pages and inserts
-  missing [[wikilinks]] between related concepts and entities.
-triggers: cross-link, auto link, link wiki, add links
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep
----
+# Wiki Cross-Linker 自动跨链功能
 
-# Wiki Cross-Linker — 自动跨链
+自动检测和创建双向链接，确保 Wiki 页面之间的互联性。
 
-扫描所有 wiki 页面，识别可链接的概念/实体，批量插入缺失的 `[[wikilinks]]`。
+## 核心概念
 
-## 何时使用
+**双向链接**：当页面 A 链接到页面 B 时，页面 B 应该知道页面 A 链接了它。Obsidian 的 `[[wikilink]]` 语法天然支持反向链接查询，但我们需要确保：
 
-当用户要求：
-- "cross-link" - 扫描并添加跨链
-- "auto link" - 自动链接相关页面
-- "link wiki" - 为知识库添加链接
-- "add links" - 补充缺失的链接
+1. 相关概念之间有明确的链接
+2. 新创建的页面被正确链接到现有页面
+3. 链接目标存在（无死链接）
 
-## 工作流程
+## 自动跨链策略
 
-```
-1. 扫描 wiki/ 下所有 .md 文件
-2. 提取每个页面的：
-   - 标题（# 标题行）
-   - 关键概念（## 要点、## 核心要点下的列表项）
-   - 标签（tags: [...]）
-   - 已有链接（[[]]）
-3. 建立概念/实体索引
-4. 对每个页面：
-   a. 识别可链接但尚未链接的概念
-   b. 找到合适的插入位置（## 相关概念、## 关联）
-   c. 插入 [[wikilinks]]
-5. 避免重复链接
-6. 记录操作到日志
-```
+### 1. 概念识别
 
-## 核心算法
-
-### 1. 建立索引
-
-```python
-# 伪代码
-pages = scan("wiki/**/*.md")
-index = {}
-for page in pages:
-    index[page.title] = {
-        "path": page.path,
-        "concepts": extract_concepts(page),
-        "tags": page.frontmatter.tags,
-        "links": extract_links(page)
-    }
-```
-
-### 2. 识别可链接项
-
-```python
-# 对每个页面，找到其他页面中提到的概念
-for page in pages:
-    available_links = []
-    for title, data in index.items():
-        if title == page.title:
-            continue
-        # 概念匹配
-        for concept in data.concepts:
-            if concept in page.content and title not in page.links:
-                available_links.append(title)
-```
-
-### 3. 插入位置
-
-优先插入到以下位置：
-1. `## 相关概念` 下的列表
-2. `## 关联` 下的列表
-3. 页面末尾的"来源"部分
-
-## 避免重复
-
-- 记录已存在的链接
-- 插入前检查是否已存在 `[[Title]]`
-- 同一概念只链接一次
-
-## 示例
-
-### 输入：概念页 A
+当创建或更新页面时，识别以下模式并自动创建链接：
 
 ```markdown
-# 注意力机制
-
-> 让模型聚焦于关键信息
-
-## 核心要点
-- 自注意力计算
-- 多头注意力
-- 位置编码
-
-## 相关概念
-- [[Transformer]]
+# 识别模式
+- 专有名词（大写开头的英文、中文术语）
+- 已存在的 Wiki 页面名称
+- 常见缩写（LLM、RAG、MoE 等）
+- 技术术语（Transformer、Attention、LoRA 等）
 ```
 
-### 扫描发现：概念页 B 有"Transformer"
+### 2. 链接生成规则
 
-```markdown
-# Transformer
+| 场景 | 操作 |
+|------|------|
+| 创建 Entity 页 | 自动链接到相关的 Concept 页 |
+| 创建 Concept 页 | 在定义中引用相关概念 |
+| 创建 Source 页 | 链接到提及的所有 Entity 和 Concept |
+| 创建 Synthesis 页 | 链接到所有引用的 Source 页 |
 
-> 注意力机制为核心的架构
-```
+### 3. 反向链接检查
 
-### 输出：自动添加链接
-
-```markdown
-# 注意力机制
-
-> 让模型聚焦于关键信息
-
-## 核心要点
-- 自注意力计算
-- 多头注意力
-- 位置编码
-
-## 相关概念
-- [[Transformer]]
-- [[多头注意力]]
-- [[位置编码]]
-```
-
-## 注意事项
-
-1. **不修改 raw/** — 只处理 wiki/ 目录
-2. **保持只读** — raw/ 是不可变的
-3. **双向链接** — 插入时考虑反向链接
-4. **避免过度链接** — 每个页面 3-5 个链接为宜
-5. **检查孤立页面** — 用 `obsidian backlinks` 确认
-
-## 推荐操作顺序
-
-1. 先运行 Lint 检查孤立页面
-2. 运行 Cross-Linker 补充链接
-3. 再次运行 Lint 验证
-4. 记录到日志
-
-## Obsidian CLI 辅助
+使用 `obsidian backlinks` 检查哪些页面链接到当前页面：
 
 ```bash
-# 查看页面的反向链接（谁链接了这个页面）
-obsidian backlinks file="页面名"
-
-# 查看孤立页面（没有被任何页面链接）
-obsidian search query="" limit=100
-# 手动检查哪些页面没有反向链接
+obsidian backlinks file="Page Name"
 ```
 
-## 常见问题
+如果重要概念页面没有反向链接，说明需要补充链接。
 
-### Q: 如何判断两个概念相关？
-A: 根据以下信号：
-- 标签重叠（tags）
-- 一个概念的要点中提到另一个概念
-- 在 synthesis 页面中一起出现
+## 自动跨链工作流
 
-### Q: 会不会产生过多链接？
-A: 建议每个页面最多 5-7 个相关概念链接。优先链接：
-1. 直接相关（同一领域）
-2. 高频出现
-3. 尚未被充分链接
+### Ingest 时自动跨链
 
-### Q: 如何处理循环链接？
-A: 允许 A→B→A 的循环，这是 Wiki 的正常结构。
+```
+1. 分析新资料，提取关键概念
+2. 创建 Source 页面
+3. 对于每个提及的概念：
+   a. 如果概念页存在 → 添加 [[Concept]]
+   b. 如果概念页不存在 → 创建概念页 + 添加 [[Concept]]
+4. 更新相关 Entity/Concept 页，添加对新 Source 的引用
+5. 更新 index.md
+```
 
----
+### Lint 时检查链接完整性
 
-## 触发命令
+```
+1. 扫描所有 wiki 链接 [[...]]
+2. 检查目标页面是否存在
+3. 报告死链接
+4. 报告孤立页面（无入链）
+5. 建议可能缺失的链接
+```
 
-- `/wiki-crosslinker` - 运行自动跨链
-- `cross-link my wiki` - 添加跨链
-- `add missing links` - 补充缺失链接
-- `link related concepts` - 链接相关概念
+## 链接建议算法
+
+### 基于关键词匹配
+
+```bash
+# 对于每个页面，提取关键词
+# 检查是否有其他页面包含这些关键词
+# 如果匹配度 > 阈值，建议添加链接
+
+grep -l "关键词" wiki/**/*.md
+```
+
+### 基于语义相似度（可选）
+
+对于大型 Wiki，可以使用向量搜索：
+
+```bash
+# 使用 qmd 进行语义搜索
+qmd search "query" --top 10
+```
+
+## 实现脚本
+
+### crosslink-check.sh
+
+```bash
+#!/bin/bash
+# 检查所有 wiki 链接是否有效
+
+WIKI_DIR="${WIKI_DIR:-wiki}"
+
+echo "=== Wiki Cross-Link Check ==="
+echo ""
+
+# 提取所有 wiki 链接
+echo "## Extracting wiki links..."
+grep -roh '\[\[[^]]*\]\]' "$WIKI_DIR" | \
+  sed 's/\[\[\(.*\)\]\]/\1/' | \
+  sort | uniq -c | sort -rn > /tmp/all_links.txt
+
+echo "Found $(wc -l < /tmp/all_links.txt) unique links"
+echo ""
+
+# 检查死链接
+echo "## Checking for dead links..."
+dead_links=0
+while read -r count link; do
+  # 尝试多种可能的文件名
+  found=0
+  for dir in entities concepts sources synthesis; do
+    if [ -f "$WIKI_DIR/$dir/${link}.md" ]; then
+      found=1
+      break
+    fi
+  done
+  
+  if [ $found -eq 0 ]; then
+    echo "  DEAD LINK: [[$link]] (referenced $count times)"
+    ((dead_links++))
+  fi
+done < /tmp/all_links.txt
+
+echo ""
+echo "Total dead links: $dead_links"
+```
+
+### find-orphans.sh
+
+```bash
+#!/bin/bash
+# 查找孤立页面（无入链）
+
+WIKI_DIR="${WIKI_DIR:-wiki}"
+
+echo "=== Finding Orphan Pages ==="
+echo ""
+
+orphans=0
+for f in $(find "$WIKI_DIR" -name "*.md" -type f); do
+  # 获取页面名（不含路径和扩展名）
+  page_name=$(basename "$f" .md)
+  
+  # 跳过 index.md 和 log.md
+  if [ "$page_name" = "index" ] || [ "$page_name" = "log" ]; then
+    continue
+  fi
+  
+  # 检查是否有其他页面链接到它
+  if ! grep -rq "\[\[$page_name\]\]" "$WIKI_DIR" --exclude="$(basename $f)"; then
+    echo "  ORPHAN: $f"
+    ((orphans++))
+  fi
+done
+
+echo ""
+echo "Total orphan pages: $orphans"
+```
+
+### suggest-links.sh
+
+```bash
+#!/bin/bash
+# 建议可能缺失的链接
+
+WIKI_DIR="${WIKI_DIR:-wiki}"
+
+echo "=== Suggesting Missing Links ==="
+echo ""
+
+# 获取所有概念名称
+concepts=$(find "$WIKI_DIR/concepts" -name "*.md" -type f -exec basename {} .md \; 2>/dev/null)
+
+for concept in $concepts; do
+  # 查找提及该概念但没有链接的页面
+  files=$(grep -rl "$concept" "$WIKI_DIR" --include="*.md" | \
+    xargs grep -L "\[\[$concept\]\]" 2>/dev/null)
+  
+  if [ -n "$files" ]; then
+    echo "## Concept: $concept"
+    echo "Pages mentioning but not linking:"
+    for f in $files; do
+      echo "  - $f"
+    done
+    echo ""
+  fi
+done
+```
+
+## 使用 Obsidian CLI 进行跨链
+
+### 检查反向链接
+
+```bash
+obsidian backlinks file="Concept Name"
+```
+
+### 添加链接到页面
+
+```bash
+obsidian append file="Page Name" content="\n- Related: [[Concept Name]]"
+```
+
+### 批量更新
+
+当创建新概念页时，自动更新相关页面：
+
+```bash
+# 1. 搜索提及该概念的页面
+obsidian search query="关键词" limit=20
+
+# 2. 对每个结果，添加链接
+for page in $(obsidian search query="关键词" --format=list); do
+  obsidian append file="$page" content="\n- See also: [[New Concept]]"
+done
+```
+
+## 配置选项
+
+在 `config.json` 中配置跨链行为：
+
+```json
+{
+  "crosslinker": {
+    "auto_link_enabled": true,
+    "min_confidence": 0.7,
+    "exclude_patterns": [
+      "index.md",
+      "log.md"
+    ],
+    "link_styles": {
+      "inline": true,
+      "see_also_section": true
+    }
+  }
+}
+```
+
+## 最佳实践
+
+### 1. 链接密度
+
+- 每个段落最多 3-5 个链接
+- 避免链接到显而易见的词（如"的"、"是"）
+- 优先链接到概念页而非来源页
+
+### 2. 链接位置
+
+- **内联链接**：在正文中自然出现
+- **参见部分**：页面末尾的 `## 相关概念` 部分
+- **来源部分**：`## 来源` 部分链接到 Source 页
+
+### 3. 链接文本
+
+```markdown
+# 好的链接
+[[Continuous Batching|连续批处理]] 技术可以...
+
+# 避免
+[[Continuous Batching]] 是一种 [[技术]]...
+```
+
+### 4. 双向确认
+
+创建链接后，检查反向链接：
+
+```bash
+obsidian backlinks file="Continuous Batching"
+```
+
+确保链接关系是双向可见的。
+
+## 故障排除
+
+### 链接不显示
+
+1. 检查页面名称是否正确（区分大小写）
+2. 确认目标页面在 `wiki/` 目录下
+3. 验证 Obsidian 正在运行
+
+### 反向链接为空
+
+1. 使用 `obsidian search` 确认链接存在
+2. 检查链接语法 `[[Page Name]]`
+3. 等待 Obsidian 索引更新
+
+### 性能问题
+
+对于大型 Wiki（>1000 页）：
+
+1. 使用 `qmd` 进行索引搜索
+2. 限制每次处理的页面数量
+3. 分批执行跨链操作

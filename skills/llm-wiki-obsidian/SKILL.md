@@ -1,40 +1,28 @@
 ---
 name: llm-wiki-obsidian
+version: 1.1.0
 description: >
-  Personal knowledge base management skill based on Karpathy's LLM Wiki pattern.
-  Build and maintain a persistent wiki through Obsidian CLI or direct file operations.
-  **Triggers**: knowledge base, wiki, organize knowledge, Obsidian, ingest sources,
-  query knowledge, personal knowledge management, Karpathy wiki pattern,
-  cross-link, auto link, link wiki, add links.
+  基于 Karpathy LLM Knowledge Base 模式的个人知识库管理技能。通过 Obsidian CLI
+  与本地 Obsidian Vault 交互。核心思想：LLM 不是在查询时从原始文档重新发现知识，
+  而是增量构建和维护一个持久的 Wiki——结构化的、互联的 Markdown 文件集合。
+  当添加新资料时，LLM 会读取、提取关键信息并整合到现有 Wiki 中。
+  **触发条件**：用户提到知识库、Wiki、整理知识、建立知识体系、Obsidian、摄入资料、
+  查询知识、维护个人知识库、或讨论 Karpathy/Wiki 模式。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, mcp__fetch__fetch
 license: MIT
-agents:
-  claude-code: full
-  cursor: full
-  windsurf: full
-  cline: full
-  aider: full
-  mcp-compatible: full
+features:
+  - ingest: 摄入新资料到 Wiki
+  - query: 查询知识库
+  - lint: 健康检查（死链接、孤立页面等）
+  - crosslinker: 自动双向链接
+  - performance: 大型 Wiki 优化
 ---
 
-# Personal Knowledge Base Skill — llm-wiki-obsidian
+# 个人知识库管理技能 — llm-wiki-obsidian
 
-Based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki through Obsidian CLI or direct file operations.
+基于 Karpathy LLM Wiki 模式，通过 Obsidian CLI 操作本地 Obsidian Vault。
 
-## Agent Compatibility
-
-| Agent | Support | Interface |
-|-------|---------|-----------|
-| Claude Code | ✅ Full | Native tools + Obsidian CLI |
-| Cursor | ✅ Full | Bash + File operations |
-| Windsurf | ✅ Full | Bash + File operations |
-| Cline | ✅ Full | Bash + File operations |
-| Aider | ✅ Full | Bash + File operations |
-| MCP-compatible | ✅ Full | MCP tools |
-
-> See [AGENT.md](../../AGENT.md) for detailed agent-specific instructions.
-
-## Core Concept
+## 核心思想
 
 **不是 RAG，是持久 Wiki！**
 
@@ -64,12 +52,10 @@ Based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki throu
 
 ---
 
-## 架构（四层）
+## 架构（三层）
 
 ```
 知识库/
-├── clippings/              # 待处理剪藏（临时存放，处理后移走）
-│   └── *.md               # Web Clipper 保存的网页剪藏
 ├── raw/                    # 原始资料（不可变，只读）
 │   ├── minimind/          # 按主题/项目分类
 │   ├── articles/          # 文章
@@ -85,78 +71,24 @@ Based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki throu
 └── AGENTS.md             # 规则文件
 ```
 
-**目录说明**：
-- `clippings/` — 临时存放区，存放待处理的网页剪藏
-- `raw/` — 已归档的原始资料，按主题分类，只读
-- `wiki/` — LLM 维护的结构化知识，包含实体、概念、来源摘要和综合分析
-
 ---
 
 ## 核心操作
 
-### 0. Sync（同步 Clippings）
-
-**每次整理时首先执行**：将 Clippings 内容移动到 raw/
-
-```
-1. 检查 clippings/ 目录是否有待处理文件
-2. 对每个文件：
-   a. 读取内容，判断主题分类
-   b. 生成合适的文件名（日期前缀 + 标题）
-   c. 移动到 raw/ 对应子目录（articles/ 或按主题）
-   d. 记录移动操作
-3. 清空 clippings/ 目录
-4. 继续执行 Ingest 流程
-```
-
-**移动命令**：
-```bash
-# 使用文件系统命令移动
-mv "clippings/剪藏标题.md" "raw/articles/2026-04-17-标题.md"
-```
-
 ### 1. Ingest（摄入新资料）
 
-当用户要求整理知识库或同步 Clippings 后：
+当用户提供新资料时：
 
 ```
-1. 扫描 raw/ 目录，识别新增/未处理的文件
-2. 对每个新文件：
-   a. 阅读资料，提取关键信息
-   b. 使用 obsidian create 创建来源摘要页 → wiki/sources/
-   c. 更新相关实体/概念页（obsidian append）
-   d. 标记文件已处理（在 frontmatter 添加 processed: true）
-3. 更新 index.md
-4. obsidian daily:append 记录到日志
-5. 执行 Synthesize 流程
+1. 保存原始资料 → raw/ 对应目录
+2. 阅读资料，提取关键信息
+3. 使用 obsidian create 创建来源摘要页 → wiki/sources/
+4. 更新相关实体/概念页（obsidian append）
+5. 更新 index.md
+6. obsidian daily:append 记录到日志
 ```
 
-### 2. Synthesize（生成综合分析）
-
-**Ingest 完成后自动执行**：根据知识库内容生成 synthesis
-
-```
-1. 读取 index.md，了解当前知识库全貌
-2. 识别可以综合的主题：
-   - 多个来源讨论同一概念
-   - 相关实体之间的关联
-   - 跨领域的话题连接
-3. 对每个值得综合的主题：
-   a. 读取相关页面（sources、entities、concepts）
-   b. 综合分析，提取共同点、差异、洞察
-   c. 创建 wiki/synthesis/综合分析页
-   d. 更新相关页面的交叉引用
-4. 更新 index.md 的 synthesis 部分
-5. 记录到日志
-```
-
-**Synthesis 页面内容**：
-- 核心发现（从多个来源提炼）
-- 观点对比（不同来源的异同）
-- 洞察与结论（LLM 的综合分析）
-- 来源引用（链接到相关页面）
-
-### 3. Query（查询知识）
+### 2. Query（查询知识）
 
 **通过 Obsidian CLI 查询**：
 ```bash
@@ -181,7 +113,7 @@ obsidian backlinks file="页面名"
 
 **重要**：好的答案应该**沉淀回 Wiki**！
 
-### 4. Lint（知识库体检）
+### 3. Lint（知识库体检）
 
 定期检查：
 - **矛盾**：不同页面的信息是否冲突
@@ -346,131 +278,14 @@ date: 2026-04-17
 
 ---
 
-## Obsidian 语法规范
+## 关键原则
 
-> 本技能专为 Obsidian 设计，必须遵循 Obsidian 语法规范。
-
-### Obsidian 链接语法
-
-```markdown
-# 正确格式
-[[页面名]] - 内部链接
-[[页面名|显示文本]] - 带显示文本的链接（不推荐）
-
-# 错误格式
-[[文件名|路径]] - ❌ 错误格式
-```
-
-### Obsidian Mermaid 流程图
-
-Obsidian 内置支持 Mermaid 流程图渲染。使用方法：
-
-### 基础语法
-
-```markdown
-```mermaid
-flowchart LR
-    A[节点名称] --> B[目标节点]
-    B --> C{判断节点}
-    C -->|是| D[结果1]
-    C -->|否| E[结果2]
-```
-```
-
-### 关键规则
-
-1. **必须使用 ` ```mermaid `** 三个反引号，不能是普通代码块
-2. **节点名称避免特殊字符**：不要用中文在节点 ID 中，用 `A[中文]` 格式
-3. **方向指示**：`LR`（左到右）、`TB`（上到下）、`RL`（右到左）
-4. **避免连续箭头**：`A --> B --> C` 可能有问题，改为 `A --> B` 然后 `B --> C`
-5. **子图谨慎使用**：Obsidian 对 `subgraph` 支持不稳定
-
-### 正确示例
-
-```mermaid
-flowchart TD
-    A[开始] --> B{判断}
-    B -->|是| C[结果1]
-    B -->|否| D[结果2]
-    C --> E[结束]
-    D --> E
-```
-
-### 错误示例（不要这样写）
-
-```markdown
-```mermaid
-flowchart TD
-    A[开始] --> B[中间] --> C[结束]  <!-- 连续箭头可能不渲染 -->
-```
-
-### 代码块格式选择
-
-| 内容类型 | 推荐格式 | 示例 |
-|----------|----------|------|
-| 流程图、架构图 | ` ```mermaid ` | 流程图、系统架构 |
-| 目录树、树形结构 | 普通代码块 ` ``` ` | 目录结构 |
-| 代码示例 | 普通代码块 ` ```python ` | Python、JavaScript |
-| 配置、列表 | 无序列表 `- ` | 部署建议、理由清单 |
-| 对比信息 | 表格 `| col | col |` | 优缺点、功能对比 |
-
-**常见错误**：
-- ❌ 用普通代码块画流程图 → 改为 ` ```mermaid `
-- ❌ 用代码块写简单列表 → 改为无序列表
-- ❌ 用代码块写部署建议 → 改为无序列表
-- ❌ 链接格式 `[[文件名|路径]]` → 改为直接文件路径
-- ❌ 表格前没有空行 → 标题和表格之间需要空行
-
-### Markdown 表格格式
-
-表格标题和表格之间**必须有空行**：
-
-```markdown
-## 示例标题
-
-| 列1 | 列2 |
-|-----|-----|
-| 内容1 | 内容2 |
-```
-
-错误示例（没有空行）：
-```markdown
-## 示例标题
-| 列1 | 列2 |
-|-----|-----|
-```
-
-### 来源引用格式
-
-**优先使用**：链接到来源页 `[[来源-xxx]]`
-
-```markdown
-## 来源
-- [[来源-Continuous Batching LLM推理]]
-- [[来源-Quantization Aware Training]]
-```
-
-**如果没有来源页**：直接写原始文件路径
-
-```markdown
-## 来源
-- 原始文件：raw/articles/2026-04-17-xxx.md
-- 参考：[外部链接](https://...)
-```
-
-**错误格式**：
-- ❌ `[[文件名|路径]]` — 错误的链接格式
-- ❌ 直接写 raw 路径没有标注 — 应该加 "原始文件：" 前缀
-
-1. **Clippings → Raw** — 每次整理先移动 clippings/ 到 raw/
-2. **Raw sources immutable** — `raw/` 是只读的，绝不修改
-3. **LLM owns wiki** — 自动创建、更新、维护 Wiki
-4. **Cross-reference everything** — 双向 `[[wikilinks]]`
-5. **Flag contradictions** — 发现矛盾时标注 `⚠️ 与 [[X]] 矛盾`
-6. **Synthesize after ingest** — 每次摄入后自动生成综合分析
-7. **Keep index current** — 每次变更后更新 index.md
-8. **Append to log** — 每次操作记录到 log.md
-9. **Use Mermaid for diagrams** — 流程图用 ` ```mermaid `，不用普通代码块
+1. **Raw sources immutable** — `raw/` 是只读的，绝不修改
+2. **LLM owns wiki** — 自动创建、更新、维护 Wiki
+3. **Cross-reference everything** — 双向 `[[wikilinks]]`
+4. **Flag contradictions** — 发现矛盾时标注 `⚠️ 与 [[X]] 矛盾`
+5. **Keep index current** — 每次变更后更新 index.md
+6. **Append to log** — 每次操作记录到 log.md
 
 ---
 
@@ -517,6 +332,10 @@ flowchart TD
 ### Obsidian Web Clipper
 浏览器扩展，将网页文章转 Markdown，快速获取资料到 raw/。
 
+### 搜索增强
+- 小 Wiki（<100 页）：`index.md` + `obsidian search` 足够
+- 增长中的 Wiki：使用 [qmd](https://github.com/tobi/qmd) CLI（BM25 + 向量搜索 + LLM 重排）
+
 ### 插件推荐
 - **Dataview**：查询页面 frontmatter，生成动态表格
 - **graph view**：查看 Wiki 结构，发现孤立页面
@@ -536,14 +355,6 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 
 ## 快速开始
 
-当用户要求整理知识库时（完整流程）：
-```
-1. Sync：检查 clippings/，移动文件到 raw/
-2. Ingest：处理 raw/ 新文件，创建 wiki 页面
-3. Synthesize：识别综合主题，生成 synthesis 页面
-4. Lint：检查知识库健康（可选）
-```
-
 当用户提供新资料要摄入时：
 ```
 1. 请用户提供资料内容或 URL
@@ -553,7 +364,6 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 5. obsidian append 更新相关实体/概念页
 6. 更新 index.md
 7. obsidian daily:append 记录
-8. 执行 Synthesize 生成综合分析
 ```
 
 当用户向知识库提问时：
@@ -561,37 +371,146 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 1. obsidian search 搜索相关页面
 2. obsidian read 读取匹配页面
 3. 综合回答并标注来源
-4. 有价值的新洞察 → 创建 synthesis 页面
+4. 询问用户是否要将回答存入 Wiki
 ```
 
 ---
 
-## 扩展与规模化
+---
 
-### 搜索增强
+## 自动跨链（Cross-Linker）
 
-- **小型 Wiki（<100 页）**：`index.md` + `obsidian search` 足够
-- **增长中的 Wiki**：使用 [qmd](https://github.com/tobi/qmd) CLI
-  - BM25 + 向量搜索 + LLM 重排
-  - 更快的语义检索
-  - LLM 可以帮助编写搜索脚本
+自动检测和创建双向链接，确保 Wiki 页面之间的互联性。
 
-### 性能优化
+详细文档：[wiki-crosslinker.md](wiki-crosslinker.md)
 
-随着 Wiki 增长，可以考虑：
-- 分离高频访问的页面到独立索引
-- 使用 Dataview 插件生成动态索引
-- 定期 Lint 保持知识库健康
+### 快速使用
+
+```bash
+# 检查链接完整性
+./scripts/crosslink-check.sh
+
+# 查找孤立页面
+./scripts/find-orphans.sh
+
+# 建议缺失链接
+./scripts/suggest-links.sh
+```
+
+### 配置
+
+```json
+{
+  "crosslinker": {
+    "enabled": true,
+    "auto_link_on_ingest": true,
+    "min_confidence": 0.7
+  }
+}
+```
 
 ---
 
-## 何时阅读参考资料
+## 健康检查（Lint）
 
-以下情况应查阅 references 目录：
+自动检查知识库健康状况。
 
-- **完整理解 Karpathy 模式**：阅读 `references/karpathy-kb-pattern.md`
-- **Obsidian CLI 完整命令参考**：阅读 `references/obsidian-cli.md`
-- **遇到 CLI 问题**：检查 Obsidian 是否运行、CLI 是否启用
+详细文档：运行 `./scripts/lint.sh --help`
+
+### 检查项目
+
+1. **死链接** - 链接目标不存在
+2. **孤立页面** - 没有入链的页面
+3. **索引完整性** - index.md 是否包含所有页面
+4. **缺失概念** - 频繁引用但没有独立页面的概念
+5. **矛盾标注** - 检查 ⚠️ 标记
+6. **大页面** - 超过 1200 词的页面
+7. **Frontmatter** - 缺少必要元数据
+8. **格式一致性** - 表格、Mermaid 语法等
+
+### 使用
+
+```bash
+# 完整检查
+./scripts/lint.sh /path/to/wiki
+
+# 详细输出
+./scripts/lint.sh --verbose
+
+# 自动修复（部分问题）
+./scripts/lint.sh --fix
+```
+
+---
+
+## 性能优化
+
+针对大型 Wiki（>1000 页）的优化策略。
+
+详细文档：[performance-guide.md](performance-guide.md)
+
+### 快速优化
+
+```json
+// config.json
+{
+  "performance": {
+    "large_wiki_threshold": 1000,
+    "batch_size": 50,
+    "use_qmd_for_search": true
+  }
+}
+```
+
+### qmd 集成
+
+```bash
+# 安装 qmd
+brew install qmd
+
+# 索引 Wiki
+qmd index wiki/
+
+# 搜索
+qmd search "关键词" --top 10
+```
+
+---
+
+## 测试
+
+运行测试套件验证功能正确性。
+
+```bash
+# 单元测试
+./scripts/test.sh
+
+# 详细输出
+./scripts/test.sh --verbose
+
+# 集成测试（需要 Obsidian 运行）
+./scripts/test.sh --integration
+```
+
+---
+
+## 配置
+
+复制 `config.example.json` 为 `config.json` 并根据需要修改。
+
+```bash
+cp skills/llm-wiki-obsidian/config.example.json skills/llm-wiki-obsidian/config.json
+```
+
+主要配置项：
+
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| `vault.path` | Obsidian Vault 路径 | - |
+| `wiki.wiki_dir` | Wiki 目录名 | `wiki` |
+| `crosslinker.enabled` | 启用自动跨链 | `true` |
+| `lint.enabled_checks` | Lint 检查项 | 全部 |
+| `performance.use_qmd_for_search` | 使用 qmd 搜索 | `false` |
 
 ---
 
@@ -599,3 +518,5 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 
 - [Karpathy LLM Knowledge Base](references/karpathy-kb-pattern.md)
 - [Obsidian CLI 完整参考](references/obsidian-cli.md)
+- [自动跨链功能](wiki-crosslinker.md)
+- [性能优化指南](performance-guide.md)

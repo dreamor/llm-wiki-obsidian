@@ -1,282 +1,212 @@
 # LLM Wiki Obsidian
 
-Personal knowledge base management skill based on [Karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). Interact with local Obsidian Vault through Obsidian CLI to build and maintain a persistent wiki.
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/dreamor/llm-wiki-obsidian)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## Core Concept
+基于 [Karpathy LLM Wiki 模式](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 的个人知识库管理技能。通过 Obsidian CLI 与本地 Obsidian Vault 交互，构建和维护持久的 Wiki。
 
-**Not RAG, but Persistent Wiki!**
+## 核心思想
 
-| RAG | Persistent Wiki |
-|-----|-----------------|
-| Re-discovers knowledge at query time | Knowledge **compiled and kept up-to-date** |
-| No accumulation, re-assembles 5 docs each time | Cross-references exist, contradictions flagged |
-| NotebookLM, ChatGPT file upload | Obsidian + LLM = IDE + Programmer |
+**不是 RAG，是持久 Wiki！**
 
-**Key Insight**: Wiki is a **persistent, compounding artifact**. Each added source enriches it.
+| RAG | 持久 Wiki |
+|-----|-----------|
+| 每次查询从原始文档重新发现知识 | 知识被编译并**持续保持最新** |
+| 无积累，综合问题每次都要重新拼凑 | 交叉引用已存在，矛盾已标注，综合已形成 |
+| NotebookLM、ChatGPT 文件上传 | Obsidian + LLM = IDE + 程序员 |
 
-**Human's job**: Curate sources, guide analysis, ask good questions.
-**LLM's job**: Bookkeeping (update cross-references, keep summaries current, flag contradictions).
+**关键洞察**：Wiki 是一个**持久、复利的产物**。每添加一份资料，Wiki 就变得更丰富。
 
-## Agent Compatibility
+## ✨ v1.1.0 新特性
 
-| Agent | Bootstrap File | Interface |
-|-------|---------------|-----------|
-| Claude Code | `CLAUDE.md` | Native tools + Obsidian CLI |
-| Cursor | `.cursor/rules/llm-wiki-obsidian.mdc` | Bash + File operations |
-| Windsurf | `.windsurf/rules/llm-wiki-obsidian.md` | Bash + File operations |
-| Codex | `AGENTS.md` | Bash + File operations |
-| Hermes | `.hermes.md` | Bash + File operations |
-| OpenClaw | `AGENTS.md` + symlink | Bash + File operations |
-| GitHub Copilot | `.github/copilot-instructions.md` | Bash + File operations |
+- 🔗 **自动跨链** - 自动检测和创建双向链接
+- 🔍 **健康检查** - Lint 脚本检查死链接、孤立页面等
+- ⚡ **性能优化** - 大型 Wiki（>1000 页）优化指南
+- 🧪 **测试套件** - 完整的单元测试和集成测试
+- ⚙️ **配置系统** - 灵活的 JSON 配置文件
 
-## Installation
+## 安装
 
-### Option A: Claude Code Plugin (Claude Only)
+### 方式 A：Claude Code Plugin（推荐）
 
 ```bash
-# Add marketplace
+# 添加市场
 /plugin marketplace add dreamor/llm-wiki-obsidian
 
-# Install plugin
+# 安装插件
 /plugin install llm-wiki-obsidian@llm-wiki-obsidian
 ```
 
-### Option B: npx (Recommended for All Agents)
+### 方式 B：Git Clone
 
 ```bash
-# Install globally via npx skills
-npx skills add dreamor/llm-wiki-obsidian
-
-# Or with specific agent
-npx skills add dreamor/llm-wiki-obsidian --agent cursor
+git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.claude/skills/llm-wiki-obsidian
+cd ~/.claude/skills/llm-wiki-obsidian
+bash skills/llm-wiki-obsidian/scripts/setup.sh
 ```
 
-### Option C: Git Clone + Setup Script
+### 方式 C：CLAUDE.md 独立使用
 
 ```bash
-# Clone the repository
-git clone https://github.com/dreamor/llm-wiki-obsidian.git
-cd llm-wiki-obsidian
-
-# Run setup script (creates symlinks for all agents)
-bash setup.sh
-```
-
-### Option D: Project-Level CLAUDE.md
-
-For project-specific usage without installing as a skill:
-
-```bash
-# New project
+# 新项目
 curl -o CLAUDE.md https://raw.githubusercontent.com/dreamor/llm-wiki-obsidian/main/CLAUDE.md
 
-# Existing project (append)
+# 现有项目（追加）
 echo "" >> CLAUDE.md
 curl https://raw.githubusercontent.com/dreamor/llm-wiki-obsidian/main/CLAUDE.md >> CLAUDE.md
 ```
 
-### Installation Comparison
+## 前置要求
 
-| Method | Scope | Agents | Auto-trigger | Use Case |
-|--------|-------|--------|--------------|----------|
-| Plugin | Global | Claude Code only | ✅ Yes | Claude users (recommended) |
-| npx | Global | All agents | ✅ Yes | Multi-agent users |
-| Git Clone | Global | All agents | ✅ Yes | Manual control |
-| CLAUDE.md | Project | All agents | ❌ No | Project-specific |
+- Obsidian 1.9+ 并启用 CLI（在 `obsidian.json` 中设置 `{ "cli": true }`）
+- 使用技能时 Obsidian 必须正在运行
 
-## Core Features
+## 核心功能
 
-### 0. Sync (Clippings → Raw)
+### Ingest（摄入）
 
-**Execute first on each organize**: Move Clippings content to raw/
-
+将新资料整理到 Wiki：
 ```
-1. Check clippings/ for pending files
-2. For each file:
-   a. Read content, determine topic classification
-   b. Generate filename (date prefix + title)
-   c. Move to raw/ subdirectory
-   d. Record the move operation
-3. Clear clippings/ directory
-4. Proceed to Ingest
+1. 保存原始资料 → raw/ 对应目录
+2. 阅读资料，提取关键信息
+3. 创建来源摘要页 → wiki/sources/
+4. 更新相关实体/概念页
+5. 更新 index.md
+6. 记录到日志
 ```
 
-### 1. Ingest
+### Query（查询）
 
-Add new materials to the wiki:
-
-```
-1. Scan raw/ for new/unprocessed files
-2. For each new file:
-   a. Extract key information
-   b. Create source summary → wiki/sources/
-   c. Update related entity/concept pages
-   d. Mark file as processed
-3. Update index.md
-4. Log the operation
-5. Execute Synthesize
+基于 Wiki 综合回答问题：
+```bash
+obsidian search query="关键词" limit=10
+obsidian read file="页面名"
+obsidian backlinks file="页面名"
 ```
 
-### 2. Synthesize
+### Lint（体检）
 
-**Auto-execute after Ingest**: Generate synthesis based on wiki content
+检查知识库健康状况：
+```bash
+# 完整检查
+./scripts/lint.sh /path/to/wiki
 
-```
-1. Read index.md to understand wiki overview
-2. Identify synthesis-worthy topics:
-   - Multiple sources discussing same concept
-   - Relationships between related entities
-   - Cross-domain topic connections
-3. For each topic:
-   a. Read related pages
-   b. Synthesize, extract commonalities, differences, insights
-   c. Create wiki/synthesis/ page
-   d. Update cross-references
-4. Update index.md synthesis section
-5. Log the operation
+# 详细输出
+./scripts/lint.sh --verbose
+
+# 自动修复
+./scripts/lint.sh --fix
 ```
 
-### 3. Query
+检查项目：
+- 死链接检测
+- 孤立页面发现
+- 索引完整性验证
+- 矛盾标注检测
+- 大页面警告
+- Frontmatter 完整性
+- 格式一致性
 
-Answer questions based on the wiki:
+### Cross-Linker（自动跨链）
+
+自动检测和创建双向链接：
+```bash
+# 检查链接完整性
+./scripts/crosslink-check.sh
+
+# 查找孤立页面
+./scripts/find-orphans.sh
+
+# 建议缺失链接
+./scripts/suggest-links.sh
+```
+
+### Performance（性能优化）
+
+针对大型 Wiki 的优化策略：
+- qmd 集成（BM25 + 向量搜索）
+- 批处理和并行执行
+- 缓存策略
+- 增量处理
+
+详见 [performance-guide.md](skills/llm-wiki-obsidian/performance-guide.md)
+
+## 架构
+
+```
+知识库/
+├── raw/                    # 原始资料（不可变，只读）
+│   ├── articles/          # 文章
+│   ├── papers/            # 论文
+│   └── assets/           # 图片、附件
+├── wiki/                   # LLM 生成的 Wiki（AI 全权维护）
+│   ├── entities/          # 实体页（人物、组织、项目）
+│   ├── concepts/         # 概念页（技术概念、理论）
+│   ├── sources/          # 来源摘要页
+│   └── synthesis/        # 综合分析页
+├── index.md               # 内容目录
+└── log.md                # 操作日志
+```
+
+## 关键原则
+
+1. **Raw sources immutable** — `raw/` 是只读的，绝不修改
+2. **LLM owns wiki** — 自动创建、更新、维护 Wiki
+3. **Cross-reference everything** — 双向 `[[wikilinks]]`
+4. **Flag contradictions** — 发现矛盾时标注 `⚠️ 与 [[X]] 矛盾`
+5. **Keep index current** — 每次变更后更新 index.md
+6. **Append to log** — 每次操作记录到 log.md
+
+## 为什么有效
+
+维护知识库最繁琐的部分不是阅读或思考，而是 **bookkeeping（记账工作）**：更新交叉引用、保持摘要最新、标注矛盾、保持一致性。人类放弃 Wiki 是因为维护负担增长比价值快。LLM 不会厌倦、不会忘记更新交叉引用、可以一次触及 15 个文件。
+
+## 推荐工具
+
+- **Obsidian Web Clipper**：浏览器扩展，将网页转 Markdown
+- **Dataview**：查询页面 frontmatter，生成动态表格
+- **graph view**：查看 Wiki 结构，发现孤立页面
+- **qmd**（可选）：BM25 + 向量搜索，适合大型 Wiki
+- **Git**：版本控制和协作
+
+## 测试
 
 ```bash
-obsidian search query="keyword" limit=10
-obsidian read file="PageName"
-obsidian backlinks file="PageName"
+# 单元测试
+./scripts/test.sh
+
+# 详细输出
+./scripts/test.sh --verbose
+
+# 集成测试（需要 Obsidian 运行）
+./scripts/test.sh --integration
 ```
 
-### 4. Lint
+## 配置
 
-Check wiki health:
-- Contradiction detection
-- Outdated information
-- Orphaned pages
-- Missing concepts
-- Cross-references
+```bash
+# 复制配置示例
+cp skills/llm-wiki-obsidian/config.example.json skills/llm-wiki-obsidian/config.json
 
-### 5. Auto Cross-Linker
-
-Automatically scan wiki pages and insert missing [[wikilinks]]:
-
-```
-# Trigger commands:
-/wiki-crosslinker
-cross-link my wiki
-add missing links
+# 编辑配置
+vim skills/llm-wiki-obsidian/config.json
 ```
 
-The cross-linker:
-1. Scans all wiki/ pages
-2. Extracts titles, concepts, and tags
-3. Identifies related but unlinked pages
-4. Inserts [[wikilinks]] at appropriate sections
-5. Avoids duplicate links
+主要配置项：
 
-## Prerequisites
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| `vault.path` | Obsidian Vault 路径 | - |
+| `crosslinker.enabled` | 启用自动跨链 | `true` |
+| `lint.enabled_checks` | Lint 检查项 | 全部 |
+| `performance.use_qmd_for_search` | 使用 qmd 搜索 | `false` |
+| `performance.large_wiki_threshold` | 大型 Wiki 阈值 | `1000` |
 
-- Obsidian 1.9+ with CLI enabled (`obsidian.json`: `{ "cli": true }`)
-- Obsidian must be running when using the CLI
-
-## Architecture (4 Layers)
-
-```
-knowledge-base/
-├── clippings/              # Pending clips (temporary, moved after processing)
-│   └── *.md               # Web Clipper saved clips
-├── raw/                    # Raw materials (immutable, read-only)
-│   ├── articles/          # Articles
-│   ├── papers/            # Papers
-│   └── assets/           # Images, attachments
-├── wiki/                   # LLM-generated Wiki (AI maintains)
-│   ├── entities/          # Entity pages (people, orgs, projects)
-│   ├── concepts/         # Concept pages (technical concepts)
-│   ├── sources/          # Source summary pages
-│   └── synthesis/        # Synthesis analysis pages
-├── index.md               # Content catalog
-└── log.md                # Operation log
-```
-
-**Directory Description**:
-- `clippings/` — Temporary storage for pending web clips
-- `raw/` — Archived raw materials, classified by topic, read-only
-- `wiki/` — Structured knowledge maintained by LLM
-
-## Key Principles
-
-1. **Clippings → Raw** — Move clippings/ to raw/ first on each organize
-2. **Raw sources immutable** — Never modify `raw/`
-3. **LLM owns wiki** — Auto create, update, maintain Wiki
-4. **Cross-reference everything** — Bidirectional `[[]]` links
-5. **Flag contradictions** — Mark with `⚠️ Contradicts [[X]]`
-6. **Synthesize after ingest** — Auto-generate synthesis after each ingest
-7. **Keep index current** — Update after each change
-8. **Append to log** — Record every operation
-
-## Workflow
-
-When organizing the knowledge base:
-
-```
-User requests organize
-    ↓
-Sync: clippings/ → raw/
-    ↓
-Ingest: Process raw/ files, create wiki pages
-    ↓
-Synthesize: Identify synthesis topics, generate pages
-    ↓
-Cross-Linker: Add missing [[wikilinks]] (optional)
-    ↓
-Lint: Check health
-    ↓
-Update index.md, log operations
-```
-
-## Obsidian Syntax Rules
-
-This skill is designed for Obsidian. Follow these rules:
-
-### Mermaid Flowcharts
-```mermaid
-flowchart LR
-    A[Node] --> B[Target]
-```
-- Use ` ```mermaid ` (three backticks)
-- Avoid Chinese in node IDs: use `A[中文]` format
-- Avoid consecutive arrows: split `A --> B --> C`
-
-### Markdown Tables
-- **REQUIRED**: Blank line between heading and table
-```markdown
-## Heading
-
-| Col1 | Col2 |
-|------|------|
-| Val1 | Val2 |
-```
-
-### Wikilinks
-- **Correct**: `[[Page Name]]`
-- **Wrong**: `[[Page Name|Path]]`
-
-## Why It Works
-
-The tedious part of maintaining a knowledge base is not reading or thinking — it's **bookkeeping**: updating cross-references, keeping summaries current, flagging contradictions, maintaining consistency. Humans abandon wikis because maintenance burden grows faster than value. LLMs don't get bored, don't forget to update a cross-reference, can touch 15 files in one pass.
-
-## Recommended Tools
-
-- **Obsidian Web Clipper**: Browser extension to convert web articles to Markdown
-- **Dataview**: Query page frontmatter, generate dynamic tables
-- **graph view**: View Wiki structure, find orphaned pages
-- **qmd** (optional): BM25 + vector search for large wikis
-- **Git**: Version control and collaboration
-
-## License
+## 许可证
 
 MIT License
 
-## References
+## 参考
 
 - [Karpathy LLM Knowledge Base Pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 - [Obsidian CLI Documentation](https://help.obsidian.md/obsidian-uri)

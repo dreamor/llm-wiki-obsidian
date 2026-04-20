@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "LLM Wiki Obsidian 配置文件示例。复制为 config.json 并根据需要修改。",
+
+  "vault": {
+    "path": "/path/to/your/obsidian/vault",
+    "name": "个人知识库",
+    "cli_enabled": true,
+    "obsidian_json_path": ".obsidian/obsidian.json"
+  },
+
+  "wiki": {
+    "raw_dir": "raw",
+    "wiki_dir": "wiki",
+    "index_file": "index.md",
+    "log_file": "log.md",
+    "subdirs": {
+      "entities": "wiki/entities",
+      "concepts": "wiki/concepts",
+      "sources": "wiki/sources",
+      "synthesis": "wiki/synthesis"
+    }
+  },
+
+  "ingest": {
+    "default_source_dir": "raw/articles",
+    "auto_create_concepts": true,
+    "auto_update_index": true,
+    "auto_log": true,
+    "extract_keywords": true,
+    "max_keywords_per_page": 10,
+    "summary_max_length": 500
+  },
+
+  "crosslinker": {
+    "enabled": true,
+    "auto_link_on_ingest": true,
+    "min_confidence": 0.7,
+    "exclude_patterns": [
+      "index.md",
+      "log.md",
+      "template.md"
+    ],
+    "link_styles": {
+      "inline": true,
+      "see_also_section": true,
+      "sources_section": true
+    },
+    "max_links_per_paragraph": 5,
+    "concept_detection": {
+      "min_length": 2,
+      "exclude_common_words": true,
+      "custom_dictionary": [
+        "LLM",
+        "RAG",
+        "MoE",
+        "LoRA",
+        "Transformer",
+        "Attention",
+        "Embedding"
+      ]
+    }
+  },
+
+  "lint": {
+    "enabled_checks": [
+      "dead_links",
+      "orphan_pages",
+      "index_completeness",
+      "missing_concepts",
+      "contradictions",
+      "large_pages",
+      "frontmatter",
+      "format_consistency"
+    ],
+    "max_page_words": 1200,
+    "required_frontmatter_fields": [
+      "type",
+      "date"
+    ],
+    "min_reference_count_for_concept": 3,
+    "auto_fix": false,
+    "report_format": "text"
+  },
+
+  "query": {
+    "default_limit": 10,
+    "search_mode": "hybrid",
+    "vector_search_enabled": false,
+    "bm25_enabled": true,
+    "cache_results": true,
+    "cache_ttl_seconds": 300
+  },
+
+  "performance": {
+    "large_wiki_threshold": 1000,
+    "batch_size": 50,
+    "use_qmd_for_search": false,
+    "qmd_path": "/usr/local/bin/qmd",
+    "parallel_processing": true,
+    "max_workers": 4
+  },
+
+  "logging": {
+    "level": "info",
+    "log_to_file": true,
+    "log_file_path": "wiki/.wiki-operations.log",
+    "log_format": "json",
+    "daily_rotation": true,
+    "max_log_files": 30
+  },
+
+  "templates": {
+    "entity": {
+      "frontmatter": {
+        "type": "entity",
+        "category": "",
+        "tags": [],
+        "date": ""
+      },
+      "sections": [
+        "基本信息",
+        "关联",
+        "来源"
+      ]
+    },
+    "concept": {
+      "frontmatter": {
+        "type": "concept",
+        "tags": [],
+        "date": "",
+        "sources": []
+      },
+      "sections": [
+        "核心要点",
+        "相关概念",
+        "来源"
+      ]
+    },
+    "source": {
+      "frontmatter": {
+        "type": "source",
+        "date": "",
+        "url": "",
+        "tags": []
+      },
+      "sections": [
+        "摘要",
+        "关键信息",
+        "关联"
+      ]
+    },
+    "synthesis": {
+      "frontmatter": {
+        "type": "synthesis",
+        "tags": [],
+        "date": ""
+      },
+      "sections": [
+        "核心发现",
+        "分析",
+        "来源"
+      ]
+    }
+  },
+
+  "integrations": {
+    "obsidian_web_clipper": {
+      "enabled": true,
+      "clippings_dir": "clippings",
+      "auto_process": false
+    },
+    "git": {
+      "enabled": true,
+      "auto_commit": false,
+      "commit_message_template": "wiki: {operation} - {title}",
+      "branch": "main"
+    },
+    "dataview": {
+      "enabled": true,
+      "queries_dir": "wiki/.dataview"
+    }
+  },
+
+  "obsidian_cli": {
+    "command": "obsidian",
+    "timeout_seconds": 30,
+    "retry_count": 3,
+    "retry_delay_ms": 1000
+  }
+}
