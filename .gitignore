@@ -35,3 +35,11 @@ kb-template/
 *.temp
 tmp/
 temp/
+
+# Planning/progress docs (session-local)
+task_plan.md
+findings.md
+progress.md
+
+# Project instructions (user-specific)
+CLAUDE.md

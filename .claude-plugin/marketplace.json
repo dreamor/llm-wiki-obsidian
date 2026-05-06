@@ -7,15 +7,15 @@
   },
   "metadata": {
     "description": "Personal knowledge base management based on Karpathy's LLM Wiki pattern",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "category": "productivity"
   },
   "plugins": [
     {
       "name": "llm-wiki-obsidian",
       "source": "./",
-      "description": "Build and maintain a persistent wiki with Obsidian CLI. Features: Ingest new sources, Query knowledge, Lint (health-check) wiki, Cross-reference everything, Flag contradictions.",
-      "version": "1.0.0",
+      "description": "Build and maintain a persistent wiki with Obsidian CLI. Features: Ingest, Query, Lint, AutoResearch, Cross-reference, Bases Dashboard, Canvas visualization, Templater templates.",
+      "version": "1.2.0",
       "author": {
         "name": "dreamor",
         "url": "https://github.com/dreamor"

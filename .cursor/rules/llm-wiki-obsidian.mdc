@@ -28,7 +28,7 @@ knowledge-base/
 1. **Raw/ immutable** — Never modify raw sources
 2. **LLM owns wiki/** — Auto maintain
 3. **Cross-reference everything** — `[[wikilinks]]`
-4. **Flag contradictions** — `⚠️ Contradicts [[X]]`
+4. **Flag contradictions** — `> [!contradiction] 与 [[X]] 矛盾`
 5. **Update index.md** — After each change
 6. **Log operations** — To daily note
 

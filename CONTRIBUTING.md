@@ -58,13 +58,41 @@ llm-wiki-obsidian/
 │   └── marketplace.json     # Marketplace configuration
 ├── skills/
 │   └── llm-wiki-obsidian/
-│       ├── SKILL.md         # Skill definition
+│       ├── SKILL.md         # Skill orchestrator (entry point)
+│       ├── wiki-ingest.md   # Ingest sub-skill
+│       ├── wiki-query.md    # Query sub-skill
+│       ├── wiki-lint.md     # Lint sub-skill (8-round health check)
+│       ├── wiki-crosslinker.md  # Auto cross-link sub-skill
+│       ├── autoresearch.md  # AutoResearch sub-skill
+│       ├── performance-guide.md # Large Wiki optimization
+│       ├── config.example.json  # Configuration template
 │       ├── references/      # Reference documentation
+│       │   ├── karpathy-kb-pattern.md
+│       │   ├── obsidian-cli.md
+│       │   └── program.md   # AutoResearch configuration
+│       ├── kb-template/     # Knowledge base template
+│       │   ├── wiki/
+│       │   │   ├── meta/dashboard.base    # Bases Dashboard
+│       │   │   ├── Wiki Map.canvas        # Knowledge graph canvas
+│       │   │   └── canvases/welcome.canvas # Welcome canvas
+│       │   ├── index.md
+│       │   └── log.md
 │       └── scripts/
-│           └── setup.sh     # Installation script
-├── CLAUDE.md                # Standalone guide
-├── README.md                # Chinese documentation
-└── README_EN.md             # English documentation
+│           ├── setup.sh     # Installation + vault configuration
+│           ├── lint.sh      # Health check script
+│           └── test.sh      # Test suite
+├── agents/
+│   ├── wiki-ingest.md      # Parallel ingestion agent
+│   └── wiki-lint.md        # Independent lint agent
+├── _templates/              # Templater templates
+│   ├── Entity.md
+│   ├── Concept.md
+│   ├── Source.md
+│   └── Synthesis.md
+├── CLAUDE.md                # Standalone guide (primary reference)
+├── AGENTS.md                # Multi-agent bootstrap
+├── README.md                # Documentation
+└── CONTRIBUTING.md          # This file
 ```
 
 ## Coding Standards

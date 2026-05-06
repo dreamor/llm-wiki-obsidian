@@ -1,6 +1,6 @@
 {
   "name": "llm-wiki-obsidian",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Personal knowledge base management skill based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki through Obsidian CLI.",
   "author": {
     "name": "dreamor",

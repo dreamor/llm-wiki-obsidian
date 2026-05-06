@@ -1,6 +1,6 @@
 # LLM Wiki Obsidian
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/dreamor/llm-wiki-obsidian)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/dreamor/llm-wiki-obsidian)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 基于 [Karpathy LLM Wiki 模式](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 的个人知识库管理技能。通过 Obsidian CLI 与本地 Obsidian Vault 交互，构建和维护持久的 Wiki。
@@ -17,13 +17,20 @@
 
 **关键洞察**：Wiki 是一个**持久、复利的产物**。每添加一份资料，Wiki 就变得更丰富。
 
-## ✨ v1.1.0 新特性
+## ✨ v1.2.0 新特性
 
+- 🔬 **AutoResearch** - 3 轮自主研究循环（搜索→抓取→综合→摄入）
+- 📊 **Bases Dashboard** - Obsidian 1.9.10+ 原生知识库概览仪表盘
+- 🗺️ **Canvas 可视化** - 知识图谱画布 + 新用户引导画布
+- 📝 **Templater 模板** - Entity/Concept/Source/Synthesis 四种模板
+- 🎨 **Vault 配置** - `setup.sh --configure-vault` 自动配置颜色/图谱/搜索
 - 🔗 **自动跨链** - 自动检测和创建双向链接
-- 🔍 **健康检查** - Lint 脚本检查死链接、孤立页面等
+- 🔍 **健康检查** - Lint 脚本检查死链接、孤立页面等（8 轮）
 - ⚡ **性能优化** - 大型 Wiki（>1000 页）优化指南
 - 🧪 **测试套件** - 完整的单元测试和集成测试
 - ⚙️ **配置系统** - 灵活的 JSON 配置文件
+- 🤖 **专用 Agents** - 并行摄入 Agent + 独立 Lint Agent
+- 📂 **Skill 模块化** - SKILL.md 拆分为 6 个子技能文档
 
 ## 安装
 
@@ -121,6 +128,30 @@ obsidian backlinks file="页面名"
 ./scripts/suggest-links.sh
 ```
 
+### AutoResearch（自主研究）
+
+3 轮迭代循环：搜索 → 抓取 → 综合 → 摄入
+
+```
+/autoresearch [主题]        # 3 轮研究（默认）
+/autoresearch [主题] --deep # 5 轮深度研究
+/autoresearch [主题] --quick # 1 轮快速研究
+```
+
+配置文件：`skills/llm-wiki-obsidian/references/program.md`
+
+### Bases Dashboard（Obsidian 1.9.10+）
+
+打开 `wiki/meta/dashboard.base` 查看知识库概览：
+- 按类型分视图（实体、概念、来源、综合分析）
+- 最近更新列表
+- 词数估算和更新状态
+
+### Canvas 可视化
+
+- `wiki/Wiki Map.canvas`：知识库架构可视化，展示目录间数据流
+- `wiki/canvases/welcome.canvas`：新用户引导画布
+
 ### Performance（性能优化）
 
 针对大型 Wiki 的优化策略：
@@ -143,7 +174,10 @@ obsidian backlinks file="页面名"
 │   ├── entities/          # 实体页（人物、组织、项目）
 │   ├── concepts/         # 概念页（技术概念、理论）
 │   ├── sources/          # 来源摘要页
-│   └── synthesis/        # 综合分析页
+│   ├── synthesis/        # 综合分析页
+│   ├── meta/             # Bases 仪表盘
+│   └── canvases/         # Canvas 可视化
+├── _templates/            # Templater 模板
 ├── index.md               # 内容目录
 └── log.md                # 操作日志
 ```
@@ -153,7 +187,7 @@ obsidian backlinks file="页面名"
 1. **Raw sources immutable** — `raw/` 是只读的，绝不修改
 2. **LLM owns wiki** — 自动创建、更新、维护 Wiki
 3. **Cross-reference everything** — 双向 `[[wikilinks]]`
-4. **Flag contradictions** — 发现矛盾时标注 `⚠️ 与 [[X]] 矛盾`
+4. **Flag contradictions** — 发现矛盾时用 Obsidian callout 标注：`> [!contradiction] 与 [[X]] 矛盾`
 5. **Keep index current** — 每次变更后更新 index.md
 6. **Append to log** — 每次操作记录到 log.md
 
@@ -164,8 +198,9 @@ obsidian backlinks file="页面名"
 ## 推荐工具
 
 - **Obsidian Web Clipper**：浏览器扩展，将网页转 Markdown
-- **Dataview**：查询页面 frontmatter，生成动态表格
+- **Dataview / Bases**：查询页面 frontmatter，生成动态表格
 - **graph view**：查看 Wiki 结构，发现孤立页面
+- **Templater**：使用 `_templates/` 模板快速创建页面
 - **qmd**（可选）：BM25 + 向量搜索，适合大型 Wiki
 - **Git**：版本控制和协作
 
@@ -197,10 +232,13 @@ vim skills/llm-wiki-obsidian/config.json
 | 配置项 | 说明 | 默认值 |
 |--------|------|--------|
 | `vault.path` | Obsidian Vault 路径 | - |
+| `wiki.subdirs` | Wiki 子目录配置 | entities/concepts/sources/synthesis/meta/canvases |
 | `crosslinker.enabled` | 启用自动跨链 | `true` |
 | `lint.enabled_checks` | Lint 检查项 | 全部 |
 | `performance.use_qmd_for_search` | 使用 qmd 搜索 | `false` |
 | `performance.large_wiki_threshold` | 大型 Wiki 阈值 | `1000` |
+| `ingest.auto_create_concepts` | 摄入时自动创建概念页 | `true` |
+| `query.search_mode` | 搜索模式 | `hybrid` |
 
 ## 许可证
 

@@ -101,7 +101,7 @@ cat wiki/concepts/concept-name.md
 grep -L "\[\[" wiki/**/*.md
 
 # Check for contradictions
-grep -r "⚠️" wiki/
+grep -r "\[!contradiction\]" wiki/
 ```
 
 ## Tool Requirements by Agent

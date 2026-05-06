@@ -1,6 +1,6 @@
 ---
 name: llm-wiki-obsidian
-version: 1.1.0
+version: 1.2.0
 description: >
   基于 Karpathy LLM Knowledge Base 模式的个人知识库管理技能。通过 Obsidian CLI
   与本地 Obsidian Vault 交互。核心思想：LLM 不是在查询时从原始文档重新发现知识，
@@ -65,7 +65,9 @@ features:
 │   ├── entities/          # 实体页（人物、组织、项目、产品）
 │   ├── concepts/         # 概念页（技术概念、理论、方法论）
 │   ├── sources/          # 来源摘要页
-│   └── synthesis/        # 综合分析页
+│   ├── synthesis/        # 综合分析页
+│   ├── meta/             # 仪表盘（Bases Dashboard）
+│   └── canvases/         # Canvas 可视化
 ├── index.md               # 内容目录
 ├── log.md                # 操作日志
 └── AGENTS.md             # 规则文件
@@ -75,52 +77,13 @@ features:
 
 ## 核心操作
 
-### 1. Ingest（摄入新资料）
-
-当用户提供新资料时：
-
-```
-1. 保存原始资料 → raw/ 对应目录
-2. 阅读资料，提取关键信息
-3. 使用 obsidian create 创建来源摘要页 → wiki/sources/
-4. 更新相关实体/概念页（obsidian append）
-5. 更新 index.md
-6. obsidian daily:append 记录到日志
-```
-
-### 2. Query（查询知识）
-
-**通过 Obsidian CLI 查询**：
-```bash
-# 搜索相关页面
-obsidian search query="关键词" limit=10
-
-# 读取页面内容
-obsidian read file="页面名"
-
-# 查看反向链接（谁引用了这个页面）
-obsidian backlinks file="页面名"
-```
-
-回答流程：
-```
-1. obsidian search 搜索相关页面
-2. obsidian read 读取匹配页面
-3. 综合回答（带引用）
-4. 有价值的新洞察 → obsidian create 创建 synthesis 页
-5. obsidian daily:append 记录查询
-```
-
-**重要**：好的答案应该**沉淀回 Wiki**！
-
-### 3. Lint（知识库体检）
-
-定期检查：
-- **矛盾**：不同页面的信息是否冲突
-- **过时**：是否有被新资料推翻的旧结论
-- **孤立**：是否有页面没有被其他页面引用（用 `obsidian backlinks` 检查）
-- **缺失**：是否有重要概念没有独立页面
-- **交叉引用**：补充缺失的双向链接 `[[]]`
+| 操作 | 详细文档 | 说明 |
+|------|----------|------|
+| **Ingest** | [wiki-ingest.md](wiki-ingest.md) | 摄入新资料：保存原始资料、创建来源页、更新实体/概念页 |
+| **Query** | [wiki-query.md](wiki-query.md) | 查询知识库：搜索、读取、综合回答、沉淀新洞察 |
+| **Lint** | [wiki-lint.md](wiki-lint.md) | 健康检查：8 轮检查（死链接、孤立页面、矛盾等） |
+| **CrossLink** | [wiki-crosslinker.md](wiki-crosslinker.md) | 自动跨链：检测和创建双向链接 |
+| **AutoResearch** | [autoresearch.md](autoresearch.md) | 自主研究：3 轮搜索→抓取→综合→摄入循环 |
 
 ---
 
@@ -178,103 +141,27 @@ obsidian vault="个人知识库" search query="关键词"
 
 ---
 
-## Wiki 页面模板
+## 页面模板
 
-### Entity 页（wiki/entities/）
+页面模板有两个来源：
 
-```markdown
----
-type: entity
-category: person|project|organization
-tags: [tag1]
-date: 2026-04-17
----
+### Obsidian Templater 模板（`_templates/`）
 
-# 实体名称
+安装 Templater 插件后，新建笔记时自动填充 frontmatter：
 
-## 基本信息
-- 属性1
-- 属性2
+| 模板 | 用途 | 路径 |
+|------|------|------|
+| Entity | 实体页 | `_templates/Entity.md` |
+| Concept | 概念页 | `_templates/Concept.md` |
+| Source | 来源页 | `_templates/Source.md` |
+| Synthesis | 综合分析页 | `_templates/Synthesis.md` |
 
-## 关联
-- [[相关实体]]
-- [[相关概念]]
+### 操作文档中的模板
 
-## 来源
-- [[来源页]]
-```
-
-### Concept 页（wiki/concepts/）
-
-```markdown
----
-type: concept
-tags: [tag1]
-date: 2026-04-17
-sources: [raw/原始文件.md]
----
-
-# 概念名称
-
-> 一句话定义
-
-## 核心要点
-- 要点1
-- 要点2
-
-## 相关概念
-- [[相关概念]]
-
-## 来源
-- [[来源文件]]
-```
-
-### Source 页（wiki/sources/）
-
-```markdown
----
-type: source
-date: 2026-04-17
-url: https://...
-tags: [LLM, RAG]
----
-
-# 资料标题
-
-## 摘要
-2-3 句话概括
-
-## 关键信息
-- 要点1
-- 要点2
-
-## 关联
-- [[相关实体]]
-- [[相关概念]]
-```
-
-### Synthesis 页（wiki/synthesis/）
-
-```markdown
----
-type: synthesis
-tags: [分析]
-date: 2026-04-17
----
-
-# 综合分析：XXX
-
-## 核心发现
-- 发现1
-- 发现2
-
-## 分析
-[综合分析内容]
-
-## 来源
-- [[来源1]]
-- [[来源2]]
-```
+LLM 创建页面时参考的详细模板：
+- Entity / Concept 模板：[wiki-ingest.md](wiki-ingest.md)
+- Source 模板：[wiki-ingest.md](wiki-ingest.md)
+- Synthesis 模板：[wiki-query.md](wiki-query.md)
 
 ---
 
@@ -283,7 +170,7 @@ date: 2026-04-17
 1. **Raw sources immutable** — `raw/` 是只读的，绝不修改
 2. **LLM owns wiki** — 自动创建、更新、维护 Wiki
 3. **Cross-reference everything** — 双向 `[[wikilinks]]`
-4. **Flag contradictions** — 发现矛盾时标注 `⚠️ 与 [[X]] 矛盾`
+4. **Flag contradictions** — 发现矛盾时用 Obsidian callout 标注：`> [!contradiction] 与 [[X]] 矛盾`
 5. **Keep index current** — 每次变更后更新 index.md
 6. **Append to log** — 每次操作记录到 log.md
 
@@ -345,6 +232,16 @@ date: 2026-04-17
 ### Git 版本控制
 Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 
+### Bases Dashboard（Obsidian 1.9.10+）
+打开 `wiki/meta/dashboard.base` 可查看知识库概览：
+- 按类型分视图（实体、概念、来源、综合分析）
+- 最近更新列表
+- 词数估算和更新状态
+
+### Canvas 知识地图
+- `wiki/Wiki Map.canvas`：知识库架构可视化，展示目录间数据流
+- `wiki/canvases/welcome.canvas`：新用户引导画布
+
 ---
 
 ## 为什么有效
@@ -384,62 +281,15 @@ Wiki 就是 Git 仓库，可以获得版本历史、分支和协作能力。
 
 详细文档：[wiki-crosslinker.md](wiki-crosslinker.md)
 
-### 快速使用
-
-```bash
-# 检查链接完整性
-./scripts/crosslink-check.sh
-
-# 查找孤立页面
-./scripts/find-orphans.sh
-
-# 建议缺失链接
-./scripts/suggest-links.sh
-```
-
-### 配置
-
-```json
-{
-  "crosslinker": {
-    "enabled": true,
-    "auto_link_on_ingest": true,
-    "min_confidence": 0.7
-  }
-}
-```
-
 ---
 
 ## 健康检查（Lint）
 
-自动检查知识库健康状况。
+自动检查知识库健康状况（8 轮检查）。
 
-详细文档：运行 `./scripts/lint.sh --help`
+详细文档：[wiki-lint.md](wiki-lint.md)
 
-### 检查项目
-
-1. **死链接** - 链接目标不存在
-2. **孤立页面** - 没有入链的页面
-3. **索引完整性** - index.md 是否包含所有页面
-4. **缺失概念** - 频繁引用但没有独立页面的概念
-5. **矛盾标注** - 检查 ⚠️ 标记
-6. **大页面** - 超过 1200 词的页面
-7. **Frontmatter** - 缺少必要元数据
-8. **格式一致性** - 表格、Mermaid 语法等
-
-### 使用
-
-```bash
-# 完整检查
-./scripts/lint.sh /path/to/wiki
-
-# 详细输出
-./scripts/lint.sh --verbose
-
-# 自动修复（部分问题）
-./scripts/lint.sh --fix
-```
+快速使用：`./scripts/lint.sh /path/to/wiki`
 
 ---
 

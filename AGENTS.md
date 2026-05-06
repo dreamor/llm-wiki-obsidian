@@ -20,6 +20,7 @@ This file provides agent-specific instructions for LLM Wiki Obsidian skill.
 - **ingest [article]** - Add new source to wiki
 - **query [topic]** - Search and answer from wiki
 - **lint wiki** - Health check
+- **autoresearch [topic]** - 3-round autonomous research
 - **sync clippings** - Move clippings to raw/
 
 ## Architecture
@@ -34,7 +35,10 @@ knowledge-base/
 │   ├── entities/          # Entity pages
 │   ├── concepts/         # Concept pages
 │   ├── sources/          # Source summaries
-│   └── synthesis/        # Synthesis analysis
+│   ├── synthesis/        # Synthesis analysis
+│   ├── meta/             # Bases Dashboard
+│   └── canvases/         # Canvas visualizations
+├── _templates/            # Templater templates
 ├── index.md               # Content catalog
 └── log.md                # Operation log
 ```
@@ -44,7 +48,7 @@ knowledge-base/
 1. **Raw/ immutable** — Never modify raw sources
 2. **LLM owns wiki/** — Auto maintain
 3. **Cross-reference everything** — `[[wikilinks]]`
-4. **Flag contradictions** — `⚠️ Contradicts [[X]]`
+4. **Flag contradictions** — `> [!contradiction] 与 [[X]] 矛盾`
 5. **Update index.md** — After each change
 6. **Log operations** — To daily note
 
