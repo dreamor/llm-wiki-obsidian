@@ -1,8 +1,17 @@
 {
   "name": "llm-wiki-obsidian",
   "version": "1.2.0",
+  "type": "module",
   "description": "Personal knowledge base management skill based on Karpathy's LLM Wiki pattern. Build and maintain a persistent wiki through Obsidian CLI.",
-  "main": "skills/llm-wiki-obsidian/SKILL.md",
+  "main": "dist/cli.js",
+  "bin": {
+    "wiki-lint": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "npx tsx src/cli.ts lint",
+    "typecheck": "tsc --noEmit"
+  },
   "keywords": [
     "obsidian",
     "knowledge-base",
@@ -40,6 +49,14 @@
       "openclaw",
       "copilot"
     ]
+  },
+  "devDependencies": {
+    "typescript": "^5.4",
+    "tsx": "^4.0",
+    "@types/node": "^20.0"
+  },
+  "dependencies": {
+    "commander": "^12.0"
   },
   "engines": {
     "node": ">=18.0.0"

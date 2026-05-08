@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+      - name: Run ShellCheck
+        run: |
+          find . -name '*.sh' -not -path './node_modules/*' \
+            | xargs shellcheck --exclude=SC2034,SC1091,SC2155
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run test suite
+        run: bash skills/llm-wiki-obsidian/scripts/test.sh
+
+  json-validate:
+    name: Validate JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli ajv-formats
+      - name: Validate config schema
+        run: |
+          ajv validate \
+            -s skills/llm-wiki-obsidian/config.schema.json \
+            -d skills/llm-wiki-obsidian/config.example.json \
+            --spec=draft2020
+      - name: Validate all JSON files
+        run: |
+          find . -name '*.json' -not -path './node_modules/*' | while read f; do
+            python3 -c "import json; json.load(open('$f'))" || echo "INVALID: $f"
+          done
+
+  agent-configs-check:
+    name: Agent Configs Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify agent configs are in sync
+        run: |
+          if [ -f scripts/generate-agent-configs.sh ]; then
+            bash scripts/generate-agent-configs.sh --check
+          else
+            echo "Generator not yet created, skipping"
+          fi

@@ -1,40 +1,39 @@
 # llm-wiki-obsidian
 
-Personal knowledge base with Obsidian.
+Personal knowledge base management with Obsidian using the LLM Wiki pattern.
 
-## Key Commands
+## Commands
 
-- organize knowledge base - Run full organize workflow
-- ingest article - Add new source to wiki
-- query knowledge - Search and answer from wiki
-- lint wiki - Health check
-- sync clippings - Move clippings to raw/
+- organize my knowledge base
+- ingest [article/URL]
+- query [topic]
+- lint wiki
 
 ## Architecture
 
 ```
-knowledge-base/
-├── raw/                    # Raw materials (immutable)
-├── wiki/                   # LLM-generated Wiki
-│   ├── entities/          # Entity pages
-│   ├── concepts/         # Concept pages
-│   ├── sources/          # Source summaries
-│   └── synthesis/        # Synthesis analysis
-├── index.md               # Content catalog
-└── log.md                # Operation log
+wiki/
+├── entities/   # People, orgs, projects
+├── concepts/   # Technical concepts
+├── sources/    # Source summaries
+└── synthesis/  # Analysis pages
 ```
 
-## Core Principles
+## Naming
 
-1. Raw/ immutable — Never modify raw sources
-2. LLM owns wiki/ — Auto maintain
-3. Cross-reference everything — [[wikilinks]]
-4. Flag contradictions — > [!contradiction] 与 [[X]] 矛盾
-5. Update index.md — After each change
+| Type | Rule | Example |
+|------|------|---------|
+| Entity | Proper nouns | `MiniMind` |
+| Concept | Chinese + English | `Continuous Batching 连续批处理` |
+| Source | `来源-` prefix | `来源-Continuous Batching LLM推理` |
+| Synthesis | `综合分析-` prefix | `综合分析-LLM推理优化策略` |
 
-## Page Types
+## Principles
 
-- Entity: wiki/entities/ - People, orgs, projects
-- Concept: wiki/concepts/ - Technical concepts
-- Source: wiki/sources/ - Source summaries
-- Synthesis: wiki/synthesis/ - Analysis
+1. Raw/ immutable — never modify raw sources
+2. LLM owns wiki/ — auto maintain
+3. Cross-reference everything — `[[]]` links
+4. Flag contradictions — `⚠️ Contradicts [[X]]`
+5. Update index.md — after each change
+
+See CLAUDE.md for full documentation.

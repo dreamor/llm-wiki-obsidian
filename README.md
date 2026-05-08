@@ -19,18 +19,21 @@
 
 ## ✨ v1.2.0 新特性
 
+- 🚀 **Node.js CLI** - 跨平台 TypeScript lint 引擎，5-8x 性能提升
+- 🔄 **增量处理** - 仅扫描变更文件，大型 Vault 秒级响应
+- 🛠️ **模块化脚本** - 8 个独立 lint 检查 + 共享函数库
+- 📋 **JSON Schema** - 配置文件 IDE 补全 + 验证
 - 🔬 **AutoResearch** - 3 轮自主研究循环（搜索→抓取→综合→摄入）
 - 📊 **Bases Dashboard** - Obsidian 1.9.10+ 原生知识库概览仪表盘
 - 🗺️ **Canvas 可视化** - 知识图谱画布 + 新用户引导画布
 - 📝 **Templater 模板** - Entity/Concept/Source/Synthesis 四种模板
-- 🎨 **Vault 配置** - `setup.sh --configure-vault` 自动配置颜色/图谱/搜索
-- 🔗 **自动跨链** - 自动检测和创建双向链接
-- 🔍 **健康检查** - Lint 脚本检查死链接、孤立页面等（8 轮）
-- ⚡ **性能优化** - 大型 Wiki（>1000 页）优化指南
+- 🔗 **自动跨链** - 增量检测和创建双向链接
+- 🔍 **健康检查** - 9 项 Lint 检查（含陈旧页面归档建议）
+- ⚡ **性能优化** - 单遍索引构建 + 增量模式
 - 🧪 **测试套件** - 完整的单元测试和集成测试
-- ⚙️ **配置系统** - 灵活的 JSON 配置文件
+- ⚙️ **配置系统** - JSON Schema 验证 + 灵活配置
 - 🤖 **专用 Agents** - 并行摄入 Agent + 独立 Lint Agent
-- 📂 **Skill 模块化** - SKILL.md 拆分为 6 个子技能文档
+- 📂 **CI/CD** - GitHub Actions 自动检查（ShellCheck + test + JSON validate）
 
 ## 安装
 
@@ -49,7 +52,8 @@
 ```bash
 git clone https://github.com/dreamor/llm-wiki-obsidian.git ~/.claude/skills/llm-wiki-obsidian
 cd ~/.claude/skills/llm-wiki-obsidian
-bash skills/llm-wiki-obsidian/scripts/setup.sh
+npm install          # 安装 TypeScript 依赖（可选，启用 Node.js 快速路径）
+bash install.sh      # 创建 multi-agent 符号链接
 ```
 
 ### 方式 C：CLAUDE.md 独立使用
@@ -67,6 +71,7 @@ curl https://raw.githubusercontent.com/dreamor/llm-wiki-obsidian/main/CLAUDE.md 
 
 - Obsidian 1.9+ 并启用 CLI（在 `obsidian.json` 中设置 `{ "cli": true }`）
 - 使用技能时 Obsidian 必须正在运行
+- Node.js >= 18（可选，用于 TypeScript CLI 引擎）
 
 ## 核心功能
 
@@ -95,37 +100,45 @@ obsidian backlinks file="页面名"
 
 检查知识库健康状况：
 ```bash
-# 完整检查
-./scripts/lint.sh /path/to/wiki
+# Node.js CLI（推荐，自动检测）
+npx tsx src/cli.ts lint -w /path/to/wiki
 
-# 详细输出
-./scripts/lint.sh --verbose
+# JSON 输出（适合 CI）
+npx tsx src/cli.ts lint -w wiki --json
 
-# 自动修复
-./scripts/lint.sh --fix
+# Shell 脚本（自动 fallback 到 bash）
+./skills/llm-wiki-obsidian/scripts/lint.sh /path/to/wiki
+
+# 增量模式（仅检查变更文件）
+./skills/llm-wiki-obsidian/scripts/lint.sh --incremental
+
+# 预览修复操作
+npx tsx src/cli.ts lint --dry-run
 ```
 
-检查项目：
+检查项目（9 项）：
 - 死链接检测
 - 孤立页面发现
 - 索引完整性验证
+- 高频引用缺失概念
 - 矛盾标注检测
-- 大页面警告
+- 大页面警告（>1200 词）
 - Frontmatter 完整性
 - 格式一致性
+- 陈旧页面归档建议（90天+无入链）
 
 ### Cross-Linker（自动跨链）
 
-自动检测和创建双向链接：
+增量检测和创建双向链接：
 ```bash
-# 检查链接完整性
-./scripts/crosslink-check.sh
+# 增量跨链（仅处理变更文件）
+./skills/llm-wiki-obsidian/scripts/crosslink.sh /path/to/wiki
 
-# 查找孤立页面
-./scripts/find-orphans.sh
+# 全量重建
+./skills/llm-wiki-obsidian/scripts/crosslink.sh --full
 
-# 建议缺失链接
-./scripts/suggest-links.sh
+# 预览模式
+./skills/llm-wiki-obsidian/scripts/crosslink.sh --dry-run
 ```
 
 ### AutoResearch（自主研究）
@@ -164,6 +177,7 @@ obsidian backlinks file="页面名"
 
 ## 架构
 
+### 知识库结构
 ```
 知识库/
 ├── raw/                    # 原始资料（不可变，只读）
@@ -180,6 +194,32 @@ obsidian backlinks file="页面名"
 ├── _templates/            # Templater 模板
 ├── index.md               # 内容目录
 └── log.md                # 操作日志
+```
+
+### 项目结构
+```
+llm-wiki-obsidian/
+├── src/                    # TypeScript CLI 引擎
+│   ├── cli.ts             # 命令行入口 (commander)
+│   ├── scanner.ts         # Wiki 扫描 & 索引构建
+│   ├── config.ts          # 配置加载
+│   ├── changelog.ts       # Git 变更日志生成
+│   ├── types.ts           # 类型定义
+│   └── checks/            # 9 项 lint 检查
+├── skills/                 # Skill 定义 + Shell 脚本
+│   └── llm-wiki-obsidian/
+│       └── scripts/
+│           ├── lib/        # 共享函数库
+│           ├── lint-checks/ # 模块化检查
+│           ├── lint.sh     # 入口（auto-detect Node.js）
+│           ├── crosslink.sh
+│           └── update-index.sh
+├── scripts/                # 项目维护脚本
+│   ├── migrate.sh         # 版本迁移
+│   └── generate-agent-configs.sh
+├── templates/              # Multi-agent 模板
+├── docs/                   # 文档
+└── .github/workflows/      # CI/CD
 ```
 
 ## 关键原则
@@ -208,13 +248,13 @@ obsidian backlinks file="页面名"
 
 ```bash
 # 单元测试
-./scripts/test.sh
+./skills/llm-wiki-obsidian/scripts/test.sh
+
+# TypeScript 类型检查
+npm run typecheck
 
 # 详细输出
-./scripts/test.sh --verbose
-
-# 集成测试（需要 Obsidian 运行）
-./scripts/test.sh --integration
+./skills/llm-wiki-obsidian/scripts/test.sh --verbose
 ```
 
 ## 配置

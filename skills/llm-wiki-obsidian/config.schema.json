@@ -1,0 +1,450 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dreamor/llm-wiki-obsidian/config.schema.json",
+  "title": "LLM Wiki Obsidian Configuration",
+  "description": "Configuration schema for llm-wiki-obsidian skill",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference (ignored at runtime)"
+    },
+    "$comment": {
+      "type": "string",
+      "description": "Human-readable comment"
+    },
+    "vault": {
+      "type": "object",
+      "description": "Obsidian Vault configuration",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Absolute path to the Obsidian vault directory"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the vault"
+        },
+        "cli_enabled": {
+          "type": "boolean",
+          "description": "Whether Obsidian CLI is enabled in this vault",
+          "default": true
+        },
+        "obsidian_json_path": {
+          "type": "string",
+          "description": "Relative path to obsidian.json within the vault",
+          "default": ".obsidian/obsidian.json"
+        }
+      },
+      "required": ["path"]
+    },
+    "wiki": {
+      "type": "object",
+      "description": "Wiki directory structure configuration",
+      "properties": {
+        "raw_dir": {
+          "type": "string",
+          "description": "Directory for raw source materials",
+          "default": "raw"
+        },
+        "wiki_dir": {
+          "type": "string",
+          "description": "Directory for generated wiki pages",
+          "default": "wiki"
+        },
+        "index_file": {
+          "type": "string",
+          "description": "Path to the index file",
+          "default": "index.md"
+        },
+        "log_file": {
+          "type": "string",
+          "description": "Path to the operations log file",
+          "default": "log.md"
+        },
+        "subdirs": {
+          "type": "object",
+          "description": "Subdirectory paths within wiki/",
+          "properties": {
+            "entities": { "type": "string", "default": "wiki/entities" },
+            "concepts": { "type": "string", "default": "wiki/concepts" },
+            "sources": { "type": "string", "default": "wiki/sources" },
+            "synthesis": { "type": "string", "default": "wiki/synthesis" }
+          }
+        }
+      }
+    },
+    "ingest": {
+      "type": "object",
+      "description": "Source ingestion settings",
+      "properties": {
+        "default_source_dir": {
+          "type": "string",
+          "description": "Default directory for new source materials",
+          "default": "raw/articles"
+        },
+        "auto_create_concepts": {
+          "type": "boolean",
+          "description": "Automatically create concept pages during ingest",
+          "default": true
+        },
+        "auto_update_index": {
+          "type": "boolean",
+          "description": "Update index.md after ingestion",
+          "default": true
+        },
+        "auto_log": {
+          "type": "boolean",
+          "description": "Log operations to log.md",
+          "default": true
+        },
+        "extract_keywords": {
+          "type": "boolean",
+          "description": "Extract keywords from source material",
+          "default": true
+        },
+        "max_keywords_per_page": {
+          "type": "integer",
+          "description": "Maximum keywords to extract per page",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 10
+        },
+        "summary_max_length": {
+          "type": "integer",
+          "description": "Maximum character length for source summaries",
+          "minimum": 100,
+          "maximum": 5000,
+          "default": 500
+        }
+      }
+    },
+    "crosslinker": {
+      "type": "object",
+      "description": "Automatic cross-linking configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable automatic cross-linking",
+          "default": true
+        },
+        "auto_link_on_ingest": {
+          "type": "boolean",
+          "description": "Run crosslinker automatically after ingestion",
+          "default": true
+        },
+        "min_confidence": {
+          "type": "number",
+          "description": "Minimum confidence threshold for auto-linking (0-1)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.7
+        },
+        "exclude_patterns": {
+          "type": "array",
+          "description": "File patterns to exclude from cross-linking",
+          "items": { "type": "string" },
+          "default": ["index.md", "log.md", "template.md"]
+        },
+        "link_styles": {
+          "type": "object",
+          "description": "Where to insert cross-links",
+          "properties": {
+            "inline": { "type": "boolean", "default": true },
+            "see_also_section": { "type": "boolean", "default": true },
+            "sources_section": { "type": "boolean", "default": true }
+          }
+        },
+        "max_links_per_paragraph": {
+          "type": "integer",
+          "description": "Maximum links to add per paragraph",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 5
+        },
+        "concept_detection": {
+          "type": "object",
+          "description": "Concept detection settings for linking",
+          "properties": {
+            "min_length": {
+              "type": "integer",
+              "description": "Minimum character length for concept detection",
+              "default": 2
+            },
+            "exclude_common_words": {
+              "type": "boolean",
+              "default": true
+            },
+            "custom_dictionary": {
+              "type": "array",
+              "description": "Custom terms to always detect as concepts",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "lint": {
+      "type": "object",
+      "description": "Health check (lint) configuration",
+      "properties": {
+        "enabled_checks": {
+          "type": "array",
+          "description": "List of enabled lint checks",
+          "items": {
+            "type": "string",
+            "enum": [
+              "dead_links",
+              "orphan_pages",
+              "index_completeness",
+              "missing_concepts",
+              "contradictions",
+              "large_pages",
+              "frontmatter",
+              "format_consistency"
+            ]
+          }
+        },
+        "max_page_words": {
+          "type": "integer",
+          "description": "Word count threshold for large page warning",
+          "minimum": 100,
+          "default": 1200
+        },
+        "required_frontmatter_fields": {
+          "type": "array",
+          "description": "Frontmatter fields required on all wiki pages",
+          "items": { "type": "string" },
+          "default": ["type", "date"]
+        },
+        "min_reference_count_for_concept": {
+          "type": "integer",
+          "description": "Minimum references before suggesting a concept page",
+          "minimum": 1,
+          "default": 3
+        },
+        "auto_fix": {
+          "type": "boolean",
+          "description": "Automatically fix issues when possible",
+          "default": false
+        },
+        "report_format": {
+          "type": "string",
+          "description": "Output format for lint reports",
+          "enum": ["text", "json", "markdown"],
+          "default": "text"
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "description": "Search and query configuration",
+      "properties": {
+        "default_limit": {
+          "type": "integer",
+          "description": "Default number of search results",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10
+        },
+        "search_mode": {
+          "type": "string",
+          "description": "Search strategy",
+          "enum": ["obsidian", "bm25", "vector", "hybrid"],
+          "default": "hybrid"
+        },
+        "vector_search_enabled": {
+          "type": "boolean",
+          "description": "Enable vector/semantic search (requires qmd)",
+          "default": false
+        },
+        "bm25_enabled": {
+          "type": "boolean",
+          "description": "Enable BM25 keyword search",
+          "default": true
+        },
+        "cache_results": {
+          "type": "boolean",
+          "description": "Cache search results",
+          "default": true
+        },
+        "cache_ttl_seconds": {
+          "type": "integer",
+          "description": "Cache time-to-live in seconds",
+          "minimum": 0,
+          "default": 300
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "description": "Performance tuning for large wikis",
+      "properties": {
+        "large_wiki_threshold": {
+          "type": "integer",
+          "description": "Page count threshold for large wiki optimizations",
+          "minimum": 100,
+          "default": 1000
+        },
+        "batch_size": {
+          "type": "integer",
+          "description": "Batch size for bulk operations",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 50
+        },
+        "use_qmd_for_search": {
+          "type": "boolean",
+          "description": "Use qmd for enhanced search (BM25 + vector)",
+          "default": false
+        },
+        "qmd_path": {
+          "type": "string",
+          "description": "Path to qmd binary",
+          "default": "/usr/local/bin/qmd"
+        },
+        "parallel_processing": {
+          "type": "boolean",
+          "description": "Enable parallel processing for batch operations",
+          "default": true
+        },
+        "max_workers": {
+          "type": "integer",
+          "description": "Maximum parallel worker count",
+          "minimum": 1,
+          "maximum": 16,
+          "default": 4
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "description": "Operation logging configuration",
+      "properties": {
+        "level": {
+          "type": "string",
+          "description": "Log level",
+          "enum": ["debug", "info", "warn", "error"],
+          "default": "info"
+        },
+        "log_to_file": {
+          "type": "boolean",
+          "description": "Write logs to file",
+          "default": true
+        },
+        "log_file_path": {
+          "type": "string",
+          "description": "Path for operation log file",
+          "default": "wiki/.wiki-operations.log"
+        },
+        "log_format": {
+          "type": "string",
+          "description": "Log output format",
+          "enum": ["text", "json"],
+          "default": "json"
+        },
+        "daily_rotation": {
+          "type": "boolean",
+          "description": "Rotate logs daily",
+          "default": true
+        },
+        "max_log_files": {
+          "type": "integer",
+          "description": "Maximum number of log files to retain",
+          "minimum": 1,
+          "default": 30
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "description": "Page template definitions",
+      "properties": {
+        "entity": { "$ref": "#/$defs/pageTemplate" },
+        "concept": { "$ref": "#/$defs/pageTemplate" },
+        "source": { "$ref": "#/$defs/pageTemplate" },
+        "synthesis": { "$ref": "#/$defs/pageTemplate" }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "description": "External integration settings",
+      "properties": {
+        "obsidian_web_clipper": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "clippings_dir": { "type": "string", "default": "clippings" },
+            "auto_process": { "type": "boolean", "default": false }
+          }
+        },
+        "git": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "auto_commit": { "type": "boolean", "default": false },
+            "commit_message_template": { "type": "string", "default": "wiki: {operation} - {title}" },
+            "branch": { "type": "string", "default": "main" }
+          }
+        },
+        "dataview": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "queries_dir": { "type": "string", "default": "wiki/.dataview" }
+          }
+        }
+      }
+    },
+    "obsidian_cli": {
+      "type": "object",
+      "description": "Obsidian CLI connection settings",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "CLI command name or path",
+          "default": "obsidian"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "description": "Command timeout in seconds",
+          "minimum": 5,
+          "maximum": 300,
+          "default": 30
+        },
+        "retry_count": {
+          "type": "integer",
+          "description": "Number of retries on failure",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 3
+        },
+        "retry_delay_ms": {
+          "type": "integer",
+          "description": "Delay between retries in milliseconds",
+          "minimum": 100,
+          "default": 1000
+        }
+      }
+    }
+  },
+  "required": ["vault"],
+  "$defs": {
+    "pageTemplate": {
+      "type": "object",
+      "description": "Template definition for a wiki page type",
+      "properties": {
+        "frontmatter": {
+          "type": "object",
+          "description": "Default frontmatter fields",
+          "additionalProperties": true
+        },
+        "sections": {
+          "type": "array",
+          "description": "Default section headings",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
