@@ -222,7 +222,7 @@ test_wikilinks() {
   assert_contains "$TEST_DIR/wiki/concepts/TestConcept.md" "\[\[" "缺少 wiki 链接"
 
   test_start "链接格式正确"
-  grep -qE "\[\[[A-Za-z0-9 -]+\]\]" "$TEST_DIR/wiki/entities/TestEntity.md" && test_pass || test_fail "链接格式不正确"
+  if grep -qE "\[\[[A-Za-z0-9 -]+\]\]" "$TEST_DIR/wiki/entities/TestEntity.md"; then test_pass; else test_fail "链接格式不正确"; fi
 }
 
 test_dead_links() {
@@ -250,7 +250,7 @@ test_dead_links() {
     fi
   done
 
-  [ "$has_dead" = false ] && test_pass || test_fail "发现死链接"
+  if [ "$has_dead" = false ]; then test_pass; else test_fail "发现死链接"; fi
 }
 
 test_orphan_pages() {
@@ -260,7 +260,7 @@ test_orphan_pages() {
   test_start "无孤立页面"
   local has_orphan=false
 
-  for f in $(find "$TEST_DIR/wiki" -name "*.md" -type f); do
+  while IFS= read -r f; do
     local page_name
     page_name=$(basename "$f" .md)
 
@@ -273,9 +273,9 @@ test_orphan_pages() {
       fi
       has_orphan=true
     fi
-  done
+  done < <(find "$TEST_DIR/wiki" -name "*.md" -type f 2>/dev/null)
 
-  [ "$has_orphan" = false ] && test_pass || test_fail "发现孤立页面"
+  if [ "$has_orphan" = false ]; then test_pass; else test_fail "发现孤立页面"; fi
 }
 
 test_index_completeness() {
@@ -297,7 +297,7 @@ test_index_completeness() {
     done < <(find "$TEST_DIR/wiki/$dir" -name "*.md" -type f 2>/dev/null)
   done
 
-  [ $missing -eq 0 ] && test_pass || test_fail "索引缺少 $missing 个页面"
+  if [ "$missing" -eq 0 ]; then test_pass; else test_fail "索引缺少 $missing 个页面"; fi
 }
 
 # ============================================
@@ -318,7 +318,7 @@ test_obsidian_cli() {
   assert_command_exists "obsidian" "obsidian 命令未找到"
 
   test_start "Obsidian 正在运行"
-  pgrep -x "Obsidian" > /dev/null && test_pass || test_fail "Obsidian 未运行"
+  if pgrep -x "Obsidian" > /dev/null; then test_pass; else test_fail "Obsidian 未运行"; fi
 }
 
 test_obsidian_commands() {
@@ -352,10 +352,10 @@ test_lint_script() {
   assert_file_exists "$lint_script"
 
   test_start "lint.sh 可执行"
-  [ -x "$lint_script" ] && test_pass || test_fail "lint.sh 不可执行"
+  if [ -x "$lint_script" ]; then test_pass; else test_fail "lint.sh 不可执行"; fi
 
   test_start "lint.sh 语法正确"
-  bash -n "$lint_script" 2>/dev/null && test_pass || test_fail "lint.sh 语法错误"
+  if bash -n "$lint_script" 2>/dev/null; then test_pass; else test_fail "lint.sh 语法错误"; fi
 }
 
 test_config_file() {
@@ -368,16 +368,16 @@ test_config_file() {
   assert_file_exists "$config_example"
 
   test_start "config.example.json 是有效 JSON"
-  python3 -c "import json; json.load(open('$config_example'))" 2>/dev/null && test_pass || test_fail "JSON 格式无效"
+  if python3 -c "import json; json.load(open('$config_example'))" 2>/dev/null; then test_pass; else test_fail "JSON 格式无效"; fi
 
   test_start "配置包含必要字段"
-  python3 -c "
+  if python3 -c "
 import json
 config = json.load(open('$config_example'))
 required = ['vault', 'wiki', 'crosslinker', 'lint']
 for field in required:
     assert field in config, f'Missing field: {field}'
-" 2>/dev/null && test_pass || test_fail "缺少必要配置字段"
+" 2>/dev/null; then test_pass; else test_fail "缺少必要配置字段"; fi
 }
 
 # ============================================

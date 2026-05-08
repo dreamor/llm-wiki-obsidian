@@ -15,7 +15,7 @@ check_index_completeness() {
   local missing_count=0
 
   for dir in entities concepts sources synthesis; do
-    for f in "$WIKI_DIR/$dir"/*.md 2>/dev/null; do
+    for f in "$WIKI_DIR/$dir"/*.md; do
       [ -f "$f" ] || continue
       local page_name
       page_name=$(basename "$f" .md)
@@ -27,7 +27,7 @@ check_index_completeness() {
     done
   done
 
-  if [ $missing_count -eq 0 ]; then
+  if [ "$missing_count" -eq 0 ]; then
     log_success "索引完整"
   else
     log_warning "索引缺少 $missing_count 个页面"

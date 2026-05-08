@@ -34,26 +34,26 @@ test_skip() {
 assert_file_exists() {
   local file="$1"
   local msg="${2:-文件不存在: $file}"
-  [ -f "$file" ] && test_pass || test_fail "$msg"
+  if [ -f "$file" ]; then test_pass; else test_fail "$msg"; fi
 }
 
 assert_dir_exists() {
   local dir="$1"
   local msg="${2:-目录不存在: $dir}"
-  [ -d "$dir" ] && test_pass || test_fail "$msg"
+  if [ -d "$dir" ]; then test_pass; else test_fail "$msg"; fi
 }
 
 assert_contains() {
   local file="$1"
   local pattern="$2"
   local msg="${3:-未找到匹配: $pattern}"
-  grep -q "$pattern" "$file" 2>/dev/null && test_pass || test_fail "$msg"
+  if grep -q "$pattern" "$file" 2>/dev/null; then test_pass; else test_fail "$msg"; fi
 }
 
 assert_command_exists() {
   local cmd="$1"
   local msg="${2:-命令未找到: $cmd}"
-  command -v "$cmd" &>/dev/null && test_pass || test_fail "$msg"
+  if command -v "$cmd" &>/dev/null; then test_pass; else test_fail "$msg"; fi
 }
 
 print_test_report() {
@@ -68,7 +68,7 @@ print_test_report() {
   echo "总计: $((PASSED + FAILED + SKIPPED))"
   echo ""
 
-  if [ $FAILED -gt 0 ]; then
+  if [ "$FAILED" -gt 0 ]; then
     echo -e "${RED}状态: 存在失败测试${NC}"
     return 1
   else

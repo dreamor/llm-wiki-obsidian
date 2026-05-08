@@ -84,10 +84,10 @@ generate_report() {
   echo "总计:            $TOTAL_ISSUES"
   echo ""
 
-  if [ $CRITICAL_ISSUES -gt 0 ]; then
+  if [ "$CRITICAL_ISSUES" -gt 0 ]; then
     echo -e "${RED}状态: 需要立即修复${NC}"
     exit 1
-  elif [ $WARNING_ISSUES -gt 0 ]; then
+  elif [ "$WARNING_ISSUES" -gt 0 ]; then
     echo -e "${YELLOW}状态: 建议修复${NC}"
     exit 0
   else
